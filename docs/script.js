@@ -1,3 +1,21 @@
+// Theme toggle
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) btn.textContent = '☀️';
+  }
+});
+
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
