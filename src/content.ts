@@ -23,10 +23,10 @@ let currentMode: Mode = 'simple';
 let sidebarVisible = false;
 let chatMessages: ChatMessage[] = [];
 let isLoading = false;
-let isDarkMode = false; 
+let isDarkMode = true; 
 
 chrome.storage.local.get(['isDarkMode'], (result) => {
-  isDarkMode = !!result.isDarkMode;
+  isDarkMode = result.isDarkMode === undefined ? true : !!result.isDarkMode;
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -116,7 +116,80 @@ function getOrCreateToggle(): HTMLElement {
       toggleBtn.classList.add('dark-mode');
     }
     
-    toggleBtn.addEventListener('click', () => {
+    // Make the toggle button draggable
+    let isDragging = false;
+    let hasMoved = false;
+    let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
+    
+    toggleBtn.style.position = 'fixed';
+    toggleBtn.style.zIndex = '999999';
+    toggleBtn.style.cursor = 'grab';
+    
+    const onDragStart = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isDragging = true;
+      
+      const point = 'touches' in e ? e.touches[0] : e as MouseEvent;
+      startX = point.clientX;
+      startY = point.clientY;
+      
+      const rect = toggleBtn.getBoundingClientRect();
+      initialLeft = rect.left;
+      initialTop = rect.top;
+      
+      toggleBtn.style.cursor = 'grabbing';
+    };
+    
+    const onDragMove = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      
+      const point = 'touches' in e ? e.touches[0] : e as MouseEvent;
+      const deltaX = point.clientX - startX;
+      const deltaY = point.clientY - startY;
+      
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        hasMoved = true;
+      }
+      
+      const newLeft = initialLeft + deltaX;
+      const newTop = initialTop + deltaY;
+      
+      toggleBtn.style.left = newLeft + 'px';
+      toggleBtn.style.top = newTop + 'px';
+    };
+    
+    const onDragEnd = () => {
+      isDragging = false;
+      toggleBtn.style.cursor = 'grab';
+    };
+    
+    const checkClick = (e: MouseEvent) => {
+      if (hasMoved) {
+        hasMoved = false;
+        return;
+      }
+      if (sidebarVisible) {
+        hideSidebar();
+      } else {
+        showChatSidebar();
+      }
+    };
+    
+    toggleBtn.addEventListener('mousedown', onDragStart);
+    toggleBtn.addEventListener('touchstart', onDragStart, { passive: false });
+    
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
+    
+    toggleBtn.addEventListener('mouseup', () => {
+      if (hasMoved) {
+        hasMoved = false;
+        return;
+      }
       if (sidebarVisible) {
         hideSidebar();
       } else {
@@ -324,6 +397,86 @@ async function sendChatMessage() {
   if (!input || !input.value.trim() || isLoading) return;
 
   const message = input.value.trim();
+  
+  // Simple command handler - executes without AI
+  if (message.startsWith('/')) {
+    const [cmd, ...args] = message.split(' ');
+    const arg = args.join(' ');
+    
+    if (cmd === '/goto' || cmd === '/open') {
+      window.open(arg, '_blank');
+      appendChatMessage({ id: generateId(), role: 'assistant', content: `Opened: ${arg}`, timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/refresh' || cmd === '/reload') {
+      window.location.reload();
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Page refreshed', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/back') {
+      window.history.back();
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Went back', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/forward') {
+      window.history.forward();
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Went forward', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/scrollup') {
+      window.scrollBy(0, -(parseInt(arg) || 300));
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Scrolled up', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/scrolldown') {
+      window.scrollBy(0, parseInt(arg) || 300);
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Scrolled down', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/print') {
+      window.print();
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Print dialog opened', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/copy') {
+      const text = document.body.innerText;
+      navigator.clipboard.writeText(text);
+      appendChatMessage({ id: generateId(), role: 'assistant', content: 'Page content copied to clipboard', timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+    
+    if (cmd === '/help') {
+      const helpText = `Available Commands:
+/goto <url> - Open URL
+/open <url> - Open URL  
+/refresh - Reload page
+/back - Go back
+/forward - Go forward
+/scrollup <px> - Scroll up (default 300)
+/scrolldown <px> - Scroll down
+/copy - Copy page text
+/print - Print page
+/help - Show commands`;
+      appendChatMessage({ id: generateId(), role: 'assistant', content: helpText, timestamp: Date.now() }, true);
+      input.value = '';
+      return;
+    }
+  }
   
   const lastSelectedText = chatMessages
     .slice()

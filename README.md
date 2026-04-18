@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 # ⚡ ExplainX - AI-Powered Text Explanations
-=======
-
-# ExplainX - AI Powered Browsing Companion
->>>>>>> d6fbcc3054b91653a13f7871bb1bee2b32db1f20
 
 **ExplainX** is a powerful Chrome Extension that provides instant AI-powered explanations for any text on the web. Select any text, click ExplainX, and get clear, concise explanations in seconds.
 
@@ -14,17 +9,41 @@
 ## ✨ Features
 
 ### 🎯 Multiple AI Modes
-- **Simple** - Easy explanations for anyone
+- **Simple** - Easy explanations for anyone (ELI5)
 - **Student** - Detailed explanations with examples
 - **Beginner Code** - Code explanations for new developers
-- **Interview** - Interview-focused explanations
+- **Interview** - Interview-focused technical prep
 - **Summary** - Quick summaries of complex topics
 
 ### 💬 Interactive Chat
 - Ask follow-up questions
 - Get deeper explanations
 - Conversation history saved locally
+- Dark mode by default
 - Clean, modern chat interface
+
+### 🖱️ Draggable Toggle
+- Toggle button is fully movable
+- Position it anywhere on page
+- Won't block website content
+- Works on any website
+
+### 📱 Mobile Friendly
+- Responsive chat UI
+- Works on all screen sizes
+- Touch-enabled drag support
+
+### 🔧 Page Commands (No AI needed)
+- `/goto <url>` - Open any URL
+- `/open <url>` - Open any URL
+- `/refresh` - Reload page
+- `/back` - Go back
+- `/forward` - Go forward
+- `/scrollup [px]` - Scroll up
+- `/scrolldown [px]` - Scroll down
+- `/copy` - Copy page text
+- `/print` - Print page
+- `/help` - Show all commands
 
 ### 🔒 Privacy First
 - All data stays local
@@ -35,6 +54,7 @@
 ### 🎨 Beautiful Design
 - Clean, minimal interface
 - Smooth animations
+- Dark mode default
 - Responsive sidebar
 - Works on any website
 
@@ -54,47 +74,38 @@
 4. Select the extracted folder
 5. Done! 🎉
 
-### Step 3: Setup API Key
-1. Click the ExplainX icon in your toolbar
-2. Go to **Settings**
-3. Add your API key (Groq, OpenAI, or Anthropic)
-4. Start explaining!
+### Step 3: Start Using
+- Select any text on any webpage
+- Click the ExplainX button that appears
+- Get instant explanation!
+- Try commands like `/scrollup` or `/goto google.com`
 
 ---
 
 ## 📖 How to Use
 
+### Basic Explanation
 1. **Select any text** on any webpage
 2. **Click the ExplainX button** that appears
 3. **Choose a mode** (Simple, Student, Code, etc.)
 4. **Get instant explanation** in the sidebar
 5. **Ask follow-up questions** in the chat
 
----
+### Page Commands
+Just type commands in the chat - no AI needed!
 
-## 🔧 Supported AI Providers
+```
+/scrollup       → Scroll up 300px
+/scrolldown 500 → Scroll down 500px
+/goto wikipedia.org → Open URL
+/refresh       → Reload page
+/help          → Show all commands
+```
 
-ExplainX works with multiple AI providers:
-
-| Provider | API Required | Cost |
-|----------|-------------|------|
-| **Groq** | ✅ Yes | Free tier available |
-| **OpenAI** | ✅ Yes | Pay-per-use (~$0.01/request) |
-| **Anthropic** | ✅ Yes | Pay-per-use |
-
-### Get Your API Key
-
-**Groq (Recommended - Free):**
-1. Go to [console.groq.com](https://console.groq.com)
-2. Sign up for free
-3. Create an API key
-4. Add to ExplainX settings
-
-**OpenAI:**
-1. Go to [platform.openai.com](https://platform.openai.com)
-2. Create an account
-3. Get your API key
-4. Add to ExplainX settings
+### Reposition Toggle
+- Click and drag the ExplainX button to move it
+- Position it anywhere on the page
+- It stays in place until moved again
 
 ---
 
@@ -129,34 +140,28 @@ npm run build
 ExplainX/
 ├── src/                    # Source code
 │   ├── background.ts       # Service worker
-│   ├── content.ts          # Content script
-│   ├── popup.ts            # Popup logic
-│   ├── options.ts          # Settings page
-│   ├── components/         # UI components
-│   ├── styles/             # CSS files
-│   └── utils/              # Helper functions
-├── website/                # Landing page
-│   ├── index.html          # Main page
-│   ├── styles.css          # Styles
-│   └── script.js           # Scripts
-├── dist/                   # Built extension (after npm run build)
-└── package.json            # Dependencies
+│   ├── content.ts         # Content script
+│   ├── popup.ts          # Popup logic
+│   ├���─ options.ts        # Settings page
+│   ├── components/       # UI components
+│   ├── styles/          # CSS files
+│   └── utils/            # Helper functions
+├── docs/                 # Website
+├── dist/                 # Built extension
+└── package.json         # Dependencies
 ```
 
 ---
 
 ## 🌐 Website & Documentation
 
-- **Landing Page**: [https://navdevs.github.io/ExplainX](https://navdevs.github.io/ExplainX/website/)
-- **Quick Start Guide**: [QUICK_START.md](QUICK_START.md)
-- **Deployment Guide**: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- **AI Chat Integration**: [AI_CHAT_INTEGRATION.md](AI_CHAT_INTEGRATION.md)
+- **Landing Page**: https://navdevs.github.io/ExplainX/
+- **GitHub**: https://github.com/NavDevs/ExplainX
+- **Issues**: https://github.com/NavDevs/ExplainX/issues
 
 ---
 
 ## 📝 Privacy Policy
-
-ExplainX respects your privacy:
 
 ✅ **No data collection** - We don't collect any personal information  
 ✅ **Local storage only** - Chat history stays on your device  
@@ -164,17 +169,14 @@ ExplainX respects your privacy:
 ✅ **Text only** - Only selected text is sent to your chosen AI provider  
 ✅ **No tracking** - No analytics or tracking scripts  
 
-See full [Privacy Policy](PRIVACY_POLICY.md) for details.
-
 ---
 
 ## 🐛 Troubleshooting
 
 ### Extension not working?
-1. Check if API key is added in Settings
-2. Make sure Developer mode is enabled
-3. Reload the extension in `chrome://extensions`
-4. Check console for errors (F12 → Console)
+1. Make sure Developer mode is enabled
+2. Reload the extension in `chrome://extensions`
+3. Check console for errors (F12 → Console)
 
 ### API errors?
 1. Verify your API key is correct
@@ -183,52 +185,34 @@ See full [Privacy Policy](PRIVACY_POLICY.md) for details.
 4. Check your internet connection
 
 ### Chat not loading?
-1. Clear chat history in Settings
-2. Reload the extension
-3. Check browser console for errors
+1. Reload the extension
+2. Check browser console for errors
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
+Contributions are welcome!
 
 1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
+2. **Create** a feature branch
+3. **Commit** your changes
+4. **Push** to the branch
 5. **Open** a Pull Request
-
-### Ways to Contribute
-- 🐛 Report bugs
-- 💡 Suggest features
-- 📝 Improve documentation
-- 🎨 Design improvements
-- 🔧 Code contributions
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Support
 
-If you find ExplainX helpful:
-
 ⭐ **Star this repository** - It helps others discover the project!  
 🐛 **Report issues** - Help us improve  
 💬 **Share feedback** - Let us know what you think  
-
----
-
-## 📞 Contact
-
-- **GitHub**: [@NavDevs](https://github.com/NavDevs)
-- **Issues**: [Report a bug](https://github.com/NavDevs/ExplainX/issues)
-- **Website**: [https://navdevs.github.io/ExplainX](https://navdevs.github.io/ExplainX/website/)
 
 ---
 
