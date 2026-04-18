@@ -23,6 +23,34 @@ if (themeBtn) {
   document.addEventListener('mouseup', () => isDragging = false);
 }
 
+// Make browser mockup movable
+const mockup = document.querySelector('.browser-mockup');
+if (mockup) {
+  mockup.style.cursor = 'grab';
+  let mockDrag = false, offX, offY;
+
+  mockup.addEventListener('mousedown', (e) => {
+    mockDrag = true;
+    const r = mockup.getBoundingClientRect();
+    offX = e.clientX - r.left;
+    offY = e.clientY - r.top;
+    mockup.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!mockDrag) return;
+    mockup.style.position = 'fixed';
+    mockup.style.left = (e.clientX - offX) + 'px';
+    mockup.style.top = (e.clientY - offY) + 'px';
+    mockup.style.zIndex = '9998';
+  });
+
+  document.addEventListener('mouseup', () => {
+    mockDrag = false;
+    mockup.style.cursor = 'grab';
+  });
+}
+
 function toggleTheme() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
