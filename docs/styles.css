@@ -142,6 +142,15 @@ body.dark .faq-item {
   border-color: var(--border-color);
 }
 
+body.dark .feature-card h3,
+body.dark .feature-card p {
+  color: var(--text-color);
+}
+
+body.dark .section-title {
+  color: var(--text-color);
+}
+
 body.dark .download-card {
   background: var(--bg-light);
   border-color: var(--border-color);
@@ -154,6 +163,82 @@ body.dark .modal-content {
 
 body.dark .modal-close {
   color: var(--text-color);
+}
+
+body.dark .modal-content {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+body.dark .modal-content h3,
+body.dark .modal-content ol,
+body.dark .modal-content li {
+  color: var(--text-color);
+}
+
+body.dark .modal-content code {
+  background: var(--bg-light);
+  color: var(--primary-color);
+}
+
+body.dark .version-info {
+  color: var(--text-light);
+}
+
+body.dark .btn-secondary {
+  background: var(--bg-light);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+body.dark .btn-secondary:hover {
+  background: var(--border-color);
+}
+
+body.dark .btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+body.dark .download-card p {
+  color: var(--text-light);
+}
+
+body.dark .download-card h2 {
+  color: var(--text-color);
+}
+
+body.dark .step-number {
+  background: var(--primary-color);
+  color: white;
+}
+
+body.dark .step h3 {
+  color: var(--text-color);
+}
+
+body.dark .step p {
+  color: var(--text-light);
+}
+
+body.dark .faq-item h3 {
+  color: var(--text-color);
+}
+
+body.dark .faq-item p {
+  color: var(--text-light);
+}
+
+body.dark .footer-section h4 {
+  color: var(--text-color);
+}
+
+body.dark .footer-section ul li a {
+  color: var(--text-light);
+}
+
+body.dark .footer-bottom p {
+  color: var(--text-light);
 }
 
 /* Hero Section */
