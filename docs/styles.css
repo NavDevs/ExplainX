@@ -456,6 +456,13 @@ body.dark .footer-bottom p {
   color: var(--text-color);
 }
 
+body.dark .features,
+body.dark .how-it-works,
+body.dark .download,
+body.dark .faq {
+  background: var(--bg-color);
+}
+
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
