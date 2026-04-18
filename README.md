@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 # ⚡ ExplainX - AI-Powered Text Explanations
+=======
+
+# ExplainX - AI Powered Browsing Companion
+>>>>>>> d6fbcc3054b91653a13f7871bb1bee2b32db1f20
 
 **ExplainX** is a powerful Chrome Extension that provides instant AI-powered explanations for any text on the web. Select any text, click ExplainX, and get clear, concise explanations in seconds.
 
