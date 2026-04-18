@@ -102,12 +102,16 @@ body {
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  cursor: pointer;
+  cursor: grab;
   font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 1000;
 }
 
 .theme-toggle:hover {

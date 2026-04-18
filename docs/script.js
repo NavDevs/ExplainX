@@ -1,4 +1,32 @@
-// Theme toggle
+// Theme toggle - movable
+const themeBtn = document.querySelector('.theme-toggle');
+if (themeBtn) {
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  themeBtn.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - themeBtn.getBoundingClientRect().left;
+    offsetY = e.clientY - themeBtn.getBoundingClientRect().top;
+    themeBtn.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    themeBtn.style.position = 'fixed';
+    themeBtn.style.left = (e.clientX - offsetX) + 'px';
+    themeBtn.style.top = (e.clientY - offsetY) + 'px';
+    themeBtn.style.zIndex = '9999';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      themeBtn.style.cursor = 'grab';
+    }
+  });
+}
+
 function toggleTheme() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
