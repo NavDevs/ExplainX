@@ -1,0 +1,337 @@
+ExplainX
+Chrome Extension
+Technical Requirements Document (TRD)
+Version 1.0  |  April 2025
+Audience: Engineering / Development Team
+Extension Platform
+Google Chrome, Manifest V3
+Primary Language
+TypeScript (compiled to JS)
+AI Backend
+OpenAI API (GPT-4o-mini) or Gemini 1.5 Flash
+Storage API
+Chrome Storage Sync + Local
+Context Menus
+Chrome Context Menu API
+Content Scripts
+Injected on all HTTP/HTTPS pages
+Build Tool
+Webpack / Vite
+Target Chrome Version
+v100+
+1. Architecture Overview
+ExplainX follows the standard Chrome Extension MV3 architecture with four distinct layers that communicate via the Chrome Messaging API.
+1.1 Component Map
+Component
+File
+Responsibility
+Service Worker
+background.ts
+Registers context menu; listens for menu click events; relays messages to content scripts; makes AI API calls.
+Content Script
+content.ts
+Injected into all pages; captures selected text; renders the explanation popup overlay; applies popup CSS.
+Popup UI
+popup.html / popup.ts
+Extension toolbar popup; shows last explanation; provides mode selector; links to options.
+Options Page
+options.html / options.ts
+API key input and save; default mode selection; theme toggle (light/dark).
+Chrome Storage
+storage.ts (util)
+Typed wrapper around chrome.storage.sync and chrome.storage.local for key/settings persistence.
+AI Client
+aiClient.ts (util)
+Centralised API call module; handles OpenAI and Gemini endpoints; applies prompt templates; manages errors.
+1.2 Message Flow
+User selects text → right-clicks → clicks 'Explain with ExplainX'.
+Chrome fires onClicked event to background.ts Service Worker.
+Service Worker reads the selection via tabs.sendMessage() → content.ts.
+Content.ts returns selectedText and injects the popup overlay with loading state.
+Service Worker calls aiClient.ts → sends request to AI API.
+Response returned → Service Worker sends explanation to content.ts via message.
+Content.ts renders explanation inside popup. User reads, copies, or dismisses.
+2. Folder Structure
+ExplainX/
+├── manifest.json              # MV3 manifest
+├── background.ts              # Service Worker
+├── content.ts                 # Content Script
+├── popup.html                 # Toolbar popup
+├── popup.ts                   # Popup logic
+├── popup.css                  # Popup styles
+├── options.html               # Settings page
+├── options.ts                 # Settings logic
+├── options.css                # Settings styles
+├── utils/
+│   ├── aiClient.ts            # API abstraction layer
+│   ├── storage.ts             # Chrome Storage wrapper
+│   ├── promptTemplates.ts     # Mode-based prompts
+│   └── codeDetector.ts        # Heuristic code detection
+├── styles/
+│   └── content.css            # Overlay & popup injection CSS
+├── icons/
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+├── webpack.config.js          # Build config
+├── tsconfig.json
+└── package.json
+3. Manifest V3 Specification
+{
+  "manifest_version": 3,
+  "name": "ExplainX",
+  "version": "1.0.0",
+  "description": "Highlight any text or code and get instant AI explanations.",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["content.js"],
+    "css": ["styles/content.css"],
+    "run_at": "document_end"
+  }],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "options_page": "options.html"
+}
+3.1 Permissions Rationale
+Permission
+Reason
+contextMenus
+Register and respond to the right-click 'Explain with ExplainX' menu item.
+storage
+Persist API key, default mode, and explanation history using Chrome Storage Sync.
+activeTab
+Access the currently active tab to retrieve selected text on demand.
+scripting
+Inject content scripts programmatically when required by the service worker.
+host_permissions: <all_urls>
+Allow content script injection on all HTTP/HTTPS pages the user visits.
+4. Background Service Worker (background.ts)
+4.1 Responsibilities
+Register context menu item on extension install.
+Listen for chrome.contextMenus.onClicked events.
+Send message to content script to retrieve selection + inject popup.
+Call AI API via aiClient.ts with selected text and mode.
+Return explanation back to content script via chrome.tabs.sendMessage().
+4.2 Key Code Skeleton
+// background.ts
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'explainx',
+    title: 'Explain with ExplainX',
+    contexts: ['selection'],
+  });
+});
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId !== 'explainx' || !tab?.id) return;
+  const { selectedText, mode } = await chrome.tabs.sendMessage(tab.id, { type: 'GET_SELECTION' });
+  const explanation = await callAI(selectedText, mode);
+  chrome.tabs.sendMessage(tab.id, { type: 'SHOW_EXPLANATION', explanation });
+});
+5. Content Script (content.ts)
+5.1 Responsibilities
+Listen for GET_SELECTION message → return window.getSelection().toString() and active mode.
+Listen for SHOW_EXPLANATION message → render or update the popup overlay.
+Handle popup dismissal (Escape key, outside click, close button).
+Render mode tab switcher; on mode switch, re-request explanation via chrome.runtime.sendMessage.
+5.2 Popup Overlay Structure
+<!-- Injected into host page DOM -->
+<div id='explainx-overlay'>
+  <div id='explainx-popup'>
+    <div class='explainx-header'>
+      <span class='explainx-logo'>ExplainX</span>
+      <button class='explainx-close'>✕</button>
+    </div>
+    <div class='explainx-modes'>
+      <button class='mode active' data-mode='simple'>Simple</button>
+      <button class='mode' data-mode='student'>Student</button>
+      <button class='mode' data-mode='beginner-code'>Beginner Code</button>
+      <button class='mode' data-mode='interview'>Interview</button>
+      <button class='mode' data-mode='summary'>Summary</button>
+    </div>
+    <div id='explainx-body'><!-- explanation renders here --></div>
+    <button id='explainx-copy'>Copy</button>
+  </div>
+</div>
+5.3 CSS Injection Strategy
+The overlay is injected via content.css declared in manifest.json. All ExplainX styles use the namespace prefix #explainx- to prevent conflicts with host page styles. z-index is set to 2147483647 (maximum) to ensure the popup renders above all host page elements. Shadow DOM is not used in v1.0 for simplicity; if host CSS bleed becomes a problem in post-MVP, migrate popup to Shadow DOM.
+6. AI Client Module (utils/aiClient.ts)
+6.1 Supported Providers
+Provider
+Model
+Endpoint
+OpenAI (default)
+gpt-4o-mini
+https://api.openai.com/v1/chat/completions
+Google Gemini
+gemini-1.5-flash
+https://generativelanguage.googleapis.com/v1beta/models/...
+6.2 API Call Function
+// utils/aiClient.ts
+export async function callAI(text: string, mode: Mode): Promise<string> {
+  const { apiKey, provider } = await getStoredSettings();
+  const prompt = buildPrompt(text, mode);  // from promptTemplates.ts
+  const res = await fetch(API_ENDPOINTS[provider], {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: MODELS[provider],
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 600,
+      temperature: 0.3
+    })
+  });
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+6.3 Error Handling
+401 Unauthorized → Display 'Invalid API key. Please check Options.'
+429 Rate Limited → Display 'Too many requests. Please wait a moment.'
+Network error → Display 'Connection failed. Check your internet.'
+Timeout (> 10s) → Abort request, display 'Request timed out. Try again.'
+Empty selection → Do not call API; show 'Please select some text first.'
+7. Prompt Templates (utils/promptTemplates.ts)
+Mode
+Prompt Template
+Simple
+Explain the following in very simple English for a beginner. Use short sentences. Avoid jargon:
+
+{text}
+Student
+Explain the following step by step, as if teaching a student. Break it into numbered steps, include a real-world analogy:
+
+{text}
+Beginner Code
+Explain the following code line by line in simple English. After the breakdown, write a 2-sentence summary of what the code does overall:
+
+{text}
+Interview
+Explain what the following code does and list 3–5 possible interview questions a recruiter might ask based on concepts used in it:
+
+{text}
+Summary
+Summarise the following in exactly 2–3 sentences. Be concise and clear:
+
+{text}
+8. Code Detection (utils/codeDetector.ts)
+The extension auto-detects whether selected content is code to apply appropriate prompts. Detection is heuristic-based (no AST parsing in v1.0).
+8.1 Detection Rules
+Selection contains 2+ lines with consistent indentation (2 or 4 spaces / tab).
+Selection contains keywords: function, def, class, const, let, var, return, import, for, while.
+Selection contains operators: =>, ::, ->, ;
+Selected text originates from a <code>, <pre>, or .highlight DOM element.
+Score ≥ 2 of the above triggers code mode.
+// utils/codeDetector.ts
+export function isCode(text: string, element?: Element): boolean {
+  let score = 0;
+  const lines = text.split('\n');
+  if (lines.length >= 2 && lines.some(l => l.startsWith('  ') || l.startsWith('\t'))) score++;
+  const keywords = /\b(function|def|class|const|let|var|return|import|for|while)\b/;
+  if (keywords.test(text)) score++;
+  if (/=>|::|->|;/.test(text)) score++;
+  if (element?.closest('code, pre, .highlight')) score += 2;
+  return score >= 2;
+}
+9. Chrome Storage Schema
+9.1 chrome.storage.sync (Synced Across Devices)
+Key
+Type
+Description
+explainx_api_key
+string
+User's AI API key. Never logged or transmitted beyond AI API call.
+explainx_provider
+'openai' | 'gemini'
+Selected AI provider. Default: 'openai'.
+explainx_default_mode
+Mode (enum)
+Default explanation mode. Default: 'simple'.
+explainx_theme
+'light' | 'dark'
+UI theme preference. Default: 'light'.
+9.2 chrome.storage.local (Device Only)
+Key
+Type
+Description
+explainx_history
+ExplanationRecord[]
+Last 20 explanations: { text, mode, explanation, timestamp }. Capped at 20 entries.
+explainx_last_mode
+Mode
+Last mode used in the session. Restored on next popup open.
+10. Build, Tooling & Dev Setup
+10.1 Tech Stack
+Language: TypeScript 5.x (compiled to ES2020 targeting Chrome V8)
+Bundler: Webpack 5 with ts-loader OR Vite with vite-plugin-web-extension
+Linting: ESLint + @typescript-eslint
+Formatting: Prettier
+Testing: Jest + jsdom for unit tests on utility modules
+10.2 Build Commands
+npm run dev     # Watch mode - rebuild on file change (for development)
+npm run build   # Production build - outputs to /dist
+npm run lint    # Run ESLint across all .ts files
+npm run test    # Run Jest test suite
+10.3 Loading Extension in Chrome
+Run npm run build.
+Open chrome://extensions/ in Chrome.
+Enable Developer Mode (toggle top-right).
+Click 'Load unpacked' → select the /dist folder.
+Extension appears in toolbar. Pin it for easy access.
+10.4 Webpack Entry Points
+// webpack.config.js - entry points
+entry: {
+  background: './src/background.ts',
+  content:    './src/content.ts',
+  popup:      './src/popup.ts',
+  options:    './src/options.ts',
+},
+11. Security Considerations
+11.1 API Key Security
+API keys are stored ONLY in chrome.storage.sync. Never in localStorage, cookies, or logs.
+Keys are transmitted only to the configured AI API endpoint over HTTPS.
+The options page masks the key field (type='password') after entry.
+No analytics or telemetry service receives the API key.
+11.2 Content Security Policy (CSP)
+MV3 extensions enforce strict CSP by default. ExplainX does not use eval() or inline scripts. All scripts are bundled at build time. The extension does not load remote scripts.
+11.3 Host Page Isolation
+Content script runs in an isolated world — ExplainX's JavaScript cannot access the host page's JS variables or modify its DOM beyond the injected overlay.
+The overlay uses CSS namespace prefix to minimize class conflicts.
+Post-MVP: Migrate to Shadow DOM for full style isolation.
+12. Testing Plan
+Type
+Tool
+Coverage
+Unit
+Jest + jsdom
+promptTemplates, codeDetector, storage wrapper, API error handling
+Integration
+Puppeteer / Playwright
+End-to-end: select text → context menu → popup → explanation rendered
+Manual QA
+Chrome DevTools
+Test on GitHub, LeetCode, Stack Overflow, Wikipedia, Medium
+Cross-site
+Manual
+Verify overlay does not break on SPAs (React, Angular, Vue apps)
+API Mocking
+msw (Mock Service Worker)
+Mock API responses for offline/unit tests
+13. Constraints & Known Limitations
+Chrome-internal pages (chrome://, chrome-extension://) cannot have content scripts injected — extension is non-functional there. This is a Chrome platform constraint.
+PDF viewer pages in Chrome do not expose text selection to content scripts in the standard way. PDF support is excluded from v1.0.
+Maximum input tokens sent to API is capped at ~1500 tokens (~1200 words) to control cost. Selections beyond this are truncated with a warning.
+MV3 Service Workers are terminated after inactivity and re-instantiated on next event. Persistent state must be stored in chrome.storage, not memory.
+Streaming AI responses require SSE handling in the Service Worker; this is a v2.0 feature.
+End of TRD — ExplainX v1.0

@@ -1,0 +1,222 @@
+ExplainX
+Chrome Extension
+Product Requirements Document (PRD)
+Version 1.0  |  April 2025
+Status: Draft
+Prepared for: Internal / Engineering Team
+Product Name
+ExplainX Chrome Extension
+Document Type
+Product Requirements Document (PRD)
+Version
+1.0
+Date
+April 2025
+Author
+Product Team
+Target Platform
+Google Chrome (Manifest V3)
+Primary AI Backend
+OpenAI API / Gemini API
+1. Executive Summary
+ExplainX is a Chrome browser extension that empowers users to instantly understand complex text and code by highlighting any content on a webpage and requesting an AI-powered explanation through a right-click context menu. The extension targets students, developers, and self-learners who regularly encounter unfamiliar technical language, documentation jargon, or complex code on platforms like GitHub, LeetCode, Stack Overflow, and Medium.
+ExplainX addresses a critical productivity gap: users currently switch between browser tabs, paste content into ChatGPT or Google, and manually decipher responses. ExplainX collapses this workflow into a single right-click action, delivering explanations inline, instantly, and in the mode most useful to the user's context.
+2. Problem Statement
+2.1 User Pain Points
+Reading research papers, technical blogs, or documentation requires constant context-switching to look up jargon.
+Developers reviewing code on GitHub or Stack Overflow lack fast, contextual explanations.
+Students preparing for interviews need quick, structured breakdowns of algorithms and code patterns.
+Existing tools (ChatGPT, Bard) require the user to copy text, open a new tab, and manually phrase a question.
+2.2 Opportunity
+There is no widely-adopted, mode-aware AI explanation tool integrated directly into the browser reading flow. ExplainX fills this gap with zero-friction, contextual AI assistance at the point of confusion.
+3. Goals & Objectives
+3.1 Product Goals
+Deliver AI-powered explanations within 3 seconds of user action.
+Support both natural language text and code in a single unified interface.
+Offer 5 distinct explanation modes to serve different user needs.
+Work seamlessly on all major developer and educational websites.
+Achieve a Chrome Web Store rating of 4.5+ within the first 3 months.
+3.2 Non-Goals (v1.0)
+Voice output or text-to-speech.
+Multi-language UI (English-only for MVP).
+Full-page summarization (post-MVP feature).
+Mobile browser support.
+4. Target Users & Personas
+4.1 Primary Personas
+Naveen – Engineering Student (Placement Prep)
+A third-year CS/IS student grinding LeetCode and reading GeeksforGeeks articles. Needs quick line-by-line code breakdowns and interview-relevant explanations without leaving the browser.
+Priya – Junior Developer
+A 1-year-experience developer reading GitHub repositories and Stack Overflow threads. Needs to understand unfamiliar code patterns and library documentation quickly.
+Rahul – Researcher / Academic
+Reading dense academic papers and technical blogs. Needs plain-English simplification of complex paragraphs without losing key meaning.
+4.2 Secondary Personas
+Product managers reading technical specs.
+Bootcamp students learning new frameworks.
+Non-technical professionals reading industry reports.
+5. Feature Requirements
+5.1 Core MVP Features
+#
+Feature
+Description
+Priority
+F-01
+Text Highlight & Context Menu
+User highlights text → right-click → 'Explain with ExplainX' option appears.
+P0 – MVP
+F-02
+Explanation Popup
+A styled popup modal shows the AI-generated explanation with mode selector and copy button.
+P0 – MVP
+F-03
+AI Text Explanation
+Sends selected text to AI API and returns a simplified English explanation.
+P0 – MVP
+F-04
+AI Code Explanation
+Detects code-like selections and applies a code-specific prompt for line-by-line breakdown.
+P0 – MVP
+F-05
+Simple Mode
+Default mode: plain English, no jargon, single paragraph output.
+P0 – MVP
+F-06
+Student Mode
+Step-by-step structured explanation with real-world analogy.
+P1
+F-07
+Beginner Code Mode
+Line-by-line code walkthrough for absolute beginners.
+P1
+F-08
+Interview Mode
+Explains code and lists possible interview questions based on patterns.
+P1
+F-09
+Short Summary Mode
+2–3 line TL;DR explanation.
+P1
+F-10
+Copy to Clipboard
+One-click copy of the explanation output.
+P1
+F-11
+Dark Mode
+Toggle between light and dark UI themes.
+P2
+F-12
+Explanation History
+Stores last 20 explanations using Chrome Storage API.
+P2
+F-13
+API Key Configuration
+Options page to enter and save the user's own API key.
+P1
+6. User Stories
+6.1 MVP Stories
+As a student, I want to highlight a confusing paragraph and get a simple explanation so I can understand the content without leaving the page.
+As a developer, I want to highlight a code snippet on GitHub and get a line-by-line explanation so I can understand unfamiliar code faster.
+As an interview candidate, I want to select a LeetCode solution and get Interview Mode output so I can understand what questions it could trigger.
+As a user, I want to choose between explanation modes so I get output that matches my current learning context.
+As a user, I want to copy the explanation to my clipboard so I can paste it into my notes.
+6.2 Acceptance Criteria (F-01 to F-05)
+F-01: Context menu item appears on any webpage when text is selected. Clicking triggers popup within 500ms.
+F-02: Popup renders within the viewport, is dismissible by Escape key, and shows loading state.
+F-03: AI response renders in under 5 seconds for text under 500 words.
+F-04: Code detection triggers automatically for selections containing 3+ lines with indentation or keywords (function, def, var, etc.).
+F-05: Simple Mode output is a maximum of 150 words.
+7. User Experience Flow
+7.1 Primary Flow (Text Explanation)
+User reads a webpage with complex text.
+User highlights a sentence or paragraph.
+User right-clicks → 'Explain with ExplainX' appears.
+User clicks the menu item.
+ExplainX popup appears at a fixed corner with a loading spinner.
+API call is made with the selected text + mode prompt.
+Explanation renders in the popup.
+User reads the explanation, optionally copies it, and dismisses the popup.
+7.2 Mode Selection Flow
+The popup includes a horizontal tab row for modes: Simple | Student | Beginner Code | Interview | Summary. The user can switch mode and re-fetch without re-selecting text. The last used mode is persisted in Chrome Storage.
+8. Non-Functional Requirements
+Performance
+Explanation response must appear within 5 seconds for inputs under 500 words.
+Reliability
+Extension must not crash or affect host page performance. Error states must be shown gracefully.
+Security
+API keys stored in Chrome Storage Sync with no plaintext logging. No user data transmitted beyond the AI API call.
+Compatibility
+Chrome v100+ on Windows, macOS, Linux. Manifest V3 compliant.
+Accessibility
+Popup must be keyboard navigable. Font size minimum 14px. WCAG AA contrast ratios.
+Extensibility
+Codebase structured to allow new modes without core refactoring.
+9. Success Metrics
+Weekly Active Users (WAU) reach 500 within 60 days of launch.
+Average explanation latency ≤ 4 seconds.
+Mode switch usage: ≥ 30% of sessions use a non-default mode.
+Popup dismissal without copy: < 40% (indicating explanation was useful).
+Chrome Web Store rating ≥ 4.5 after 50+ reviews.
+Error rate (API failures + crashes) < 2% of all sessions.
+10. Phased Delivery Roadmap
+Phase
+Name
+Deliverables
+Timeline
+Phase 1
+Foundation
+manifest.json, popup HTML, icons, extension loading
+Week 1
+Phase 2
+Text Capture
+Content script, text selection detection, Chrome messaging
+Week 1-2
+Phase 3
+Context Menu
+Right-click item, popup trigger, selected text passing
+Week 2
+Phase 4
+AI Integration
+API connection, prompt engineering, response rendering
+Week 2-3
+Phase 5
+Code Mode
+Code detection heuristic, code-specific prompts, Beginner mode
+Week 3
+Phase 6
+All Modes
+Student, Interview, Summary modes; mode persistence
+Week 3-4
+Phase 7
+Polish
+Dark mode, history, copy button, error handling, UI refinement
+Week 4-5
+11. Assumptions & Risks
+11.1 Assumptions
+Users have a valid API key for OpenAI or Gemini.
+The extension will operate on standard HTTP/HTTPS pages; Chrome-internal pages are excluded.
+AI API responses will be in English.
+11.2 Risks
+Risk
+Severity
+Mitigation
+API key exposure
+High
+Store in Chrome Storage Sync; never log or transmit keys.
+AI response latency
+Medium
+Add streaming support; show loading skeleton.
+Chrome policy changes
+Low
+Build MV3-compliant from day 1.
+Cost overruns on API
+Medium
+Implement client-side token limits per request.
+12. Future Scope (Post v1.0)
+Voice explanation via text-to-speech.
+Multi-language support (Hindi, Spanish, French).
+Full-page article summarization with one click.
+Floating AI sidebar for chat with selected content.
+Bug detection in highlighted code.
+Error message explanation.
+Save explanations to PDF.
+Firefox and Edge extension ports.
+End of PRD — ExplainX v1.0

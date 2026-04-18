@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ExplainX - Settings</title>
+  <link rel="stylesheet" href="styles/options.css">
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="icons/icon128.jpg" alt="logo" class="logo">
+        <h2>ExplainX</h2>
+      </div>
+      <nav>
+        <div class="nav-item active">General Settings</div>
+        <div class="nav-item">AI Configuration</div>
+        <div class="nav-item">Advanced</div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header>
+        <h1>General Settings</h1>
+        <p>Configure how ExplainX interacts with your web pages.</p>
+      </header>
+
+      <div class="settings-card">
+        <section class="settings-section">
+          <h3>Explanation Style</h3>
+          <div class="form-group">
+            <label for="defaultMode">Default Persona</label>
+            <select id="defaultMode">
+              <option value="simple">Simple (ELI5)</option>
+              <option value="student">Student (Detailed)</option>
+              <option value="beginner-code">Beginner Code (Line-by-line)</option>
+              <option value="interview">Interview Mode (Technical Prep)</option>
+              <option value="summary">Quick Summary</option>
+            </select>
+            <span class="hint">This determines the tone and detail level of initial explanations.</span>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>AI Engine</h3>
+          <div class="form-group">
+            <label for="provider">AI Provider</label>
+            <select id="provider">
+              <option value="gemini">Google Gemini (Default)</option>
+              <option value="anthropic">Anthropic Claude (Premium Required)</option>
+              <option value="openai">OpenAI ChatGPT (Premium Required)</option>
+            </select>
+          </div>
+          <div class="info-alert">
+            <span class="icon">✨</span>
+            <p>Your API key is managed automatically. No custom setup required.</p>
+          </div>
+        </section>
+
+        <footer class="settings-actions">
+          <div id="status"></div>
+          <button id="saveBtn" class="primary-btn">Save Changes</button>
+        </footer>
+      </div>
+    </main>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

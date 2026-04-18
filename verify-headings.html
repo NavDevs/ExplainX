@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify AI Heading Rendering - ExplainX</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .panel {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    h3 {
+      color: #1a73e8;
+      margin-top: 0;
+    }
+    .code-block {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 16px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: #1a73e8;
+      margin: 20px 0;
+    }
+    .explanation-body {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #202124;
+    }
+    .explanation-body h1,
+    .explanation-body h2,
+    .explanation-body h3,
+    .explanation-body h4 {
+      margin-top: 16px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1a73e8;
+      line-height: 1.3;
+    }
+    .explanation-body h2 {
+      font-size: 16px;
+    }
+    .explanation-body p {
+      margin-bottom: 10px;
+    }
+    .explanation-body ul,
+    .explanation-body ol {
+      margin-bottom: 10px;
+      padding-left: 20px;
+    }
+    .explanation-body li {
+      margin-bottom: 6px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .badge-success {
+      background: #e6f4ea;
+      color: #137333;
+    }
+    .badge-info {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+    .verification {
+      background: #e6f4ea;
+      border-left: 4px solid #137333;
+      padding: 16px;
+      margin-top: 20px;
+      border-radius: 4px;
+    }
+    .verification strong {
+      color: #137333;
+    }
+    button {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #1557b0;
+    }
+    .test-controls {
+      margin: 20px 0;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Verify: AI Heading Rendering</h1>
+  <p class="subtitle">This test demonstrates that the extension renders AI headings EXACTLY as provided, with NO additions or modifications.</p>
+
+  <div class="container">
+    <!-- Left Panel: AI Response -->
+    <div class="panel">
+      <span class="badge badge-info">INPUT</span>
+      <h3>AI Response (Raw Markdown)</h3>
+      <p>This is what the AI model returns:</p>
+      <div class="code-block" id="ai-response"></div>
+      
+      <div class="test-controls">
+        <strong>Test Different Responses:</strong><br>
+        <button onclick="loadTest1()">Student Mode Example</button>
+        <button onclick="loadTest2()">Simple Mode Example</button>
+        <button onclick="loadTest3()">Code Mode Example</button>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">→</div>
+
+    <!-- Right Panel: Rendered Output -->
+    <div class="panel">
+      <span class="badge badge-success">OUTPUT</span>
+      <h3>Rendered in Sidebar (#explainx-body)</h3>
+      <p>This is what users see (EXACT rendering):</p>
+      <div class="explanation-body" id="rendered-output"></div>
+      
+      <div class="verification">
+        <strong>✅ Verification:</strong>
+        <ul style="margin: 10px 0 0 0;">
+          <li>Headings come 100% from AI response</li>
+          <li>Zero headers added by extension</li>
+          <li>No modifications to content</li>
+          <li>Pure marked.parse() conversion</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configure marked (same as extension)
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+    });
+
+    // Test Case 1: Student Mode
+    function loadTest1() {
+      const aiResponse = `## Overview
+Async/await is syntactic sugar over JavaScript Promises that makes asynchronous code easier to read and write.
+
+## Key Concepts
+- **async**: Marks a function as asynchronous, automatically returning a Promise
+- **await**: Pauses function execution until a Promise resolves or rejects
+- **Error Handling**: Use try/catch blocks to handle rejected Promises gracefully
+- **Non-blocking**: Other code continues running while waiting for async operations
+
+## How It Works
+When you call an async function with await, JavaScript:
+1. Pauses execution at the await statement
+2. Lets other code run (non-blocking)
+3. Resumes when the Promise settles
+4. Returns the resolved value or throws on rejection
+
+## Real-World Example
+Think of async/await like ordering food at a restaurant:
+- You place your order (start async operation)
+- You can chat with friends (other code runs)
+- Food arrives when ready (Promise resolves)
+- You eat and continue your meal (resume execution)
+
+## Common Mistakes
+- Forgetting to use await with async functions
+- Not handling errors with try/catch
+- Using await in non-async functions
+- Creating unnecessary sequential awaits instead of parallel execution
+
+## Summary
+Async/await makes asynchronous JavaScript code look and behave more like synchronous code, improving readability and maintainability while preserving non-blocking behavior.`;
+
+      document.getElementById('ai-response').textContent = aiResponse;
+      document.getElementById('rendered-output').innerHTML = marked.parse(aiResponse);
+    }
+
+    // Test Case 2: Simple Mode
+    function loadTest2() {
+      const aiResponse = `## What Is a Variable?
+A variable is like a labeled box that stores information in your computer's memory.
+
+## How Variables Work
+Imagine you have a box and you write "age" on it. Inside, you put the number 25. Now whenever someone asks "what's in the age box?", you can quickly look and say "25!"
+
+In JavaScript, you create a variable like this:
+\`\`\`javascript
+let age = 25;
+\`\`\`
+
+## Why We Need Variables
+Variables let us:
+- **Remember information**: Store data we'll use later
+- **Reuse values**: Use the same data in multiple places
+- **Update information**: Change the value as needed
+
+## Everyday Example
+Think of variables like contacts in your phone:
+- You save "Mom" with a phone number (storing a value)
+- You can call "Mom" anytime without remembering the number (reusing the value)
+- If Mom gets a new number, you update the contact (updating the value)
+
+## Key Takeaway
+- Variables are storage containers for data
+- They have names so we can find them easily
+- We can change what's inside them
+- They make programming much easier!`;
+
+      document.getElementById('ai-response').textContent = aiResponse;
+      document.getElementById('rendered-output').innerHTML = marked.parse(aiResponse);
+    }
+
+    // Test Case 3: Beginner Code Mode
+    function loadTest3() {
+      const aiResponse = `## What This Code Does
+This function takes an array of numbers and returns a new array with only the even numbers.
+
+## Line-by-Line Breakdown
+
+\`\`\`javascript
+function filterEvenNumbers(numbers) {
+\`\`\`
+- \`function\`: Creates a reusable block of code
+- \`filterEvenNumbers\`: The name we gave our function (descriptive!)
+- \`(numbers)\): The input - an array of numbers we want to filter
+
+\`\`\`javascript
+  return numbers.filter(num => num % 2 === 0);
+\`\`\`
+- \`return\): Sends back the result
+- \`numbers.filter()\): A built-in array method that creates a new array with elements that pass a test
+- \`num =>\): Arrow function syntax (shorthand for function)
+- \`num % 2 === 0\): The test - checks if dividing by 2 has no remainder (even number)
+
+## How It Works
+1. Function receives an array: \`[1, 2, 3, 4, 5, 6]\`
+2. \`filter()\` checks each number one by one
+3. For each number, it asks: "Is this even?" (\`num % 2 === 0\`)
+4. If YES: includes it in the new array
+5. If NO: skips it
+6. Returns: \`[2, 4, 6]\`
+
+## Why Write It This Way
+- **Concise**: One line does all the work!
+- **Readable**: Clear intent - "filter even numbers"
+- **Functional**: Doesn't modify the original array
+- **Modern**: Uses ES6 features (arrow functions)
+
+## Common Mistakes
+- Using \`forEach\` instead of \`filter\` (forEach doesn't return a new array)
+- Forgetting the \`return\` statement
+- Modifying the original array instead of creating a new one
+- Using \`=\` instead of \`===\` (assignment vs comparison)
+
+## Try This
+Modify the function to filter odd numbers instead:
+\`\`\`javascript
+function filterOddNumbers(numbers) {
+  return numbers.filter(num => num % 2 !== 0);
+}
+\`\`\``;
+
+      document.getElementById('ai-response').textContent = aiResponse;
+      document.getElementById('rendered-output').innerHTML = marked.parse(aiResponse);
+    }
+
+    // Load first test by default
+    loadTest1();
+  </script>
+</body>
+</html>

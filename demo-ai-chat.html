@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat Component Demo - ExplainX</title>
+  <link rel="stylesheet" href="styles/ai-chat.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .demo-container {
+      max-width: 1200px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .demo-title {
+      color: #1f2937;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-shadow: none;
+    }
+
+    .demo-subtitle {
+      color: #6b7280;
+      font-size: 16px;
+      margin-bottom: 40px;
+    }
+
+    .demo-chat-wrapper {
+      max-width: 450px;
+      margin: 0 auto;
+      height: 600px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
+    }
+
+    .demo-info {
+      margin-top: 40px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      color: #1f2937;
+    }
+
+    .demo-info h3 {
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .demo-info ul {
+      text-align: left;
+      list-style: none;
+      padding: 0;
+    }
+
+    .demo-info li {
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .demo-info li:before {
+      content: "✓ ";
+      color: #667eea;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .demo-chat-wrapper {
+        height: 80vh;
+      }
+      
+      .demo-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1 class="demo-title">🤖 AI Chat Component</h1>
+    <p class="demo-subtitle">Vanilla TypeScript implementation with animated glassmorphism design</p>
+    
+    <div class="demo-chat-wrapper">
+      <div id="ai-chat-container"></div>
+    </div>
+
+    <div class="demo-info">
+      <h3>Features</h3>
+      <ul>
+        <li>Animated rotating border</li>
+        <li>Gradient background animation</li>
+        <li>Floating particles effect</li>
+        <li>Smooth message animations</li>
+        <li>Typing indicator</li>
+        <li>Glassmorphism design</li>
+        <li>Fully responsive</li>
+        <li>No React dependencies</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="demo-ai-chat.js"></script>
+</body>
+</html>
