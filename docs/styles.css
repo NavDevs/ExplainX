@@ -36,6 +36,7 @@ body {
   color: var(--text-color);
   line-height: 1.6;
   overflow-x: hidden;
+  background: var(--bg-color);
 }
 
 .container {
@@ -97,8 +98,8 @@ body {
 }
 
 .theme-toggle {
-  background: var(--bg-light);
-  border: 2px solid var(--border-color);
+  background: #1e1e1e;
+  border: 2px solid #3c4043;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -108,10 +109,10 @@ body {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  position: fixed;
-  top: 100px;
+  position: absolute;
+  top: 120px;
   right: 20px;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .theme-toggle:hover {

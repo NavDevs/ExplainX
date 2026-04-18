@@ -6,25 +6,21 @@ if (themeBtn) {
 
   themeBtn.addEventListener('mousedown', (e) => {
     isDragging = true;
-    offsetX = e.clientX - themeBtn.getBoundingClientRect().left;
-    offsetY = e.clientY - themeBtn.getBoundingClientRect().top;
+    const rect = themeBtn.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
     themeBtn.style.cursor = 'grabbing';
   });
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    themeBtn.style.position = 'fixed';
-    themeBtn.style.left = (e.clientX - offsetX) + 'px';
-    themeBtn.style.top = (e.clientY - offsetY) + 'px';
-    themeBtn.style.zIndex = '9999';
+    const x = e.clientX - offsetX;
+    const y = e.clientY - offsetY;
+    themeBtn.style.left = x + 'px';
+    themeBtn.style.top = y + 'px';
   });
 
-  document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      themeBtn.style.cursor = 'grab';
-    }
-  });
+  document.addEventListener('mouseup', () => isDragging = false);
 }
 
 function toggleTheme() {
@@ -35,14 +31,11 @@ function toggleTheme() {
   if (btn) btn.textContent = isDark ? '☀️' : '🌙';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark');
-    const btn = document.querySelector('.theme-toggle');
-    if (btn) btn.textContent = '☀️';
-  }
-});
+// Default to dark mode
+document.body.classList.add('dark');
+localStorage.setItem('theme', 'dark');
+const btn = document.querySelector('.theme-toggle');
+if (btn) btn.textContent = '☀️';
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
