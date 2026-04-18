@@ -126,6 +126,14 @@ body.dark .navbar {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+body.dark .nav-links a {
+  color: var(--text-color);
+}
+
+body.dark .logo-text {
+  color: var(--primary-color);
+}
+
 /* Dark mode sections */
 body.dark .features,
 body.dark .how-it-works,
