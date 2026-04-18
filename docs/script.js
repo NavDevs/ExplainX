@@ -23,6 +23,36 @@ if (themeBtn) {
   document.addEventListener('mouseup', () => isDragging = false);
 }
 
+// Make logo movable
+const logoImg = document.querySelector('.logo-img');
+if (logoImg) {
+  let logoDragging = false;
+  let logoOffsetX, logoOffsetY;
+
+  logoImg.addEventListener('mousedown', (e) => {
+    logoDragging = true;
+    const rect = logoImg.getBoundingClientRect();
+    logoOffsetX = e.clientX - rect.left;
+    logoOffsetY = e.clientY - rect.top;
+    logoImg.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!logoDragging) return;
+    const x = e.clientX - logoOffsetX;
+    const y = e.clientY - logoOffsetY;
+    logoImg.style.position = 'absolute';
+    logoImg.style.left = x + 'px';
+    logoImg.style.top = y + 'px';
+    logoImg.style.zIndex = '9999';
+  });
+
+  document.addEventListener('mouseup', () => {
+    logoDragging = false;
+    logoImg.style.cursor = 'grab';
+  });
+}
+
 // Make browser mockup movable
 const mockup = document.querySelector('.browser-mockup');
 if (mockup) {
