@@ -356,10 +356,58 @@ body.dark .footer-bottom p {
 }
 
 .browser-mockup {
-  background: white;
+  background: #1e1e1e;
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+}
+
+body.dark .browser-mockup {
+  background: #1e1e1e;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark .browser-header {
+  background: #2d2d2d;
+}
+
+body.dark .browser-dots span {
+  background: #555;
+}
+
+body.dark .browser-content {
+  background: #121212;
+}
+
+body.dark .mockup-sidebar {
+  background: #1e1e1e;
+  border-color: #3c4043;
+}
+
+body.dark .mockup-header {
+  background: #2d2d2d;
+  color: #e8eaed;
+  border-color: #3c4043;
+}
+
+body.dark .mockup-messages {
+  background: #121212;
+}
+
+body.dark .mock-msg.ai {
+  background: #2d2d2d;
+  color: #e8eaed;
+}
+
+body.dark .mock-msg.user {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+body.dark .mockup-input {
+  background: #2d2d2d;
+  color: #9aa0a6;
+  border-color: #3c4043;
 }
 
 .browser-header {
