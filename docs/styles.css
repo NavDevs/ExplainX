@@ -19,16 +19,17 @@
 }
 
 body.dark {
-  --primary-color: #4da3ff;
-  --primary-dark: #3d8fd4;
+  --primary-color: #8ab4f8;
+  --primary-dark: #667eea;
   --secondary-color: #9aa0a6;
-  --bg-color: #121212;
-  --bg-light: #1e1e1e;
+  --bg-color: #0d0d0d;
+  --bg-light: #1a1a1a;
   --text-color: #e8eaed;
-  --text-light: #9aa0a6;
+  --text-light: #bdc1c6;
   --border-color: #3c4043;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --accent-highlight: #8ab4f8;
 }
 
 body {
