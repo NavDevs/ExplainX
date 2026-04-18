@@ -13,87 +13,24 @@ document.querySelectorAll('.nav-links a').forEach(link => {
   });
 });
 
-// Theme toggle - movable
+// Theme toggle - not movable
 const themeBtn = document.querySelector('.theme-toggle');
 if (themeBtn) {
-  let isDragging = false;
-  let offsetX, offsetY;
-
-  themeBtn.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    const rect = themeBtn.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    themeBtn.style.cursor = 'grabbing';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const x = e.clientX - offsetX;
-    const y = e.clientY - offsetY;
-    themeBtn.style.left = x + 'px';
-    themeBtn.style.top = y + 'px';
-  });
-
-  document.addEventListener('mouseup', () => isDragging = false);
+  themeBtn.style.position = 'fixed';
+  themeBtn.style.top = '100px';
+  themeBtn.style.right = '20px';
 }
 
-// Make logo movable
+// Logo - not movable
 const logoImg = document.querySelector('.logo-img');
 if (logoImg) {
-  let logoDragging = false;
-  let logoOffsetX, logoOffsetY;
-
-  logoImg.addEventListener('mousedown', (e) => {
-    logoDragging = true;
-    const rect = logoImg.getBoundingClientRect();
-    logoOffsetX = e.clientX - rect.left;
-    logoOffsetY = e.clientY - rect.top;
-    logoImg.style.cursor = 'grabbing';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!logoDragging) return;
-    const x = e.clientX - logoOffsetX;
-    const y = e.clientY - logoOffsetY;
-    logoImg.style.position = 'absolute';
-    logoImg.style.left = x + 'px';
-    logoImg.style.top = y + 'px';
-    logoImg.style.zIndex = '9999';
-  });
-
-  document.addEventListener('mouseup', () => {
-    logoDragging = false;
-    logoImg.style.cursor = 'grab';
-  });
+  logoImg.style.position = 'static';
 }
 
-// Make browser mockup movable
+// Browser mockup - not movable
 const mockup = document.querySelector('.browser-mockup');
 if (mockup) {
-  mockup.style.cursor = 'grab';
-  let mockDrag = false, offX, offY;
-
-  mockup.addEventListener('mousedown', (e) => {
-    mockDrag = true;
-    const r = mockup.getBoundingClientRect();
-    offX = e.clientX - r.left;
-    offY = e.clientY - r.top;
-    mockup.style.cursor = 'grabbing';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!mockDrag) return;
-    mockup.style.position = 'fixed';
-    mockup.style.left = (e.clientX - offX) + 'px';
-    mockup.style.top = (e.clientY - offY) + 'px';
-    mockup.style.zIndex = '9998';
-  });
-
-  document.addEventListener('mouseup', () => {
-    mockDrag = false;
-    mockup.style.cursor = 'grab';
-  });
+  mockup.style.position = 'relative';
 }
 
 function toggleTheme() {
