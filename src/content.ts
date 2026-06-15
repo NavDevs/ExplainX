@@ -105,7 +105,7 @@ function getOrCreateToggle(): HTMLElement {
   if (!toggleBtn) {
     toggleBtn = document.createElement('button');
     toggleBtn.id = 'explainx-toggle-btn';
-    toggleBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon128.jpg')}" alt="logo" class="explainx-toggle-logo" />`;
+    toggleBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="logo" class="explainx-toggle-logo" />`;
     toggleBtn.title = 'Open ExplainX Chat';
     document.body.appendChild(toggleBtn);
     
@@ -237,7 +237,7 @@ async function showChatSidebar() {
     <div id="explainx-popup">
       <div class="explainx-header">
         <span class="explainx-logo">
-          <img src="${chrome.runtime.getURL('icons/icon128.jpg')}" alt="logo" class="explainx-chat-logo" /> 
+          <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="logo" class="explainx-chat-logo" /> 
           ExplainX
         </span>
         <div class="header-actions">
