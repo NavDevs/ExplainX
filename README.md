@@ -8,20 +8,16 @@ ExplainX is a powerful Chrome Extension that provides instant AI-powered explana
 
 ## ✨ Features
 
-### 🎯 Multiple AI Modes
-- **Multiple Explanation Modes:** Switch between Simple (ELI5), Student (academic), Code (syntax breakdown), Interview (prep), or Summary mode.
-- **Vision AI (Image Upload):** Upload screenshots and ask questions about them. ExplainX's AI models analyze images directly in the chat.
-- **Interactive Chat Sidebar:** Don't just read an explanation—chat with the AI to ask follow-up questions until you fully understand.
-- **Draggable Interface:** The activation button is a draggable floating icon, keeping it out of your way until you need it. Conversation history saved locally
-- Dark mode by default
+### 🎯 Powerful AI Integration
+- **Default Groq API Key**: Fully integrated Groq API for blazing fast inference without needing your own API key.
+- **Vision Capabilities**: Powered by the `llama-4-scout` multimodal model. Upload screenshots or simply use `Ctrl+V` to paste images directly into the chat for instant visual analysis!
+- **Empathetic Chatbot**: The AI isn't just a textbook; it has a friendly, supportive, and emotionally intelligent personality designed to be conversational.
+- **Multiple Explanation Modes**: Switch between Simple (ELI5), Student (academic), Code (syntax breakdown), Interview (prep), or Summary mode.
 
-### 🖱️ Draggable Toggle
-- Toggle button is fully movable
-- Position it anywhere on page
-
-### 📱 Mobile Friendly
-- Responsive chat UI
-- Works on all screen sizes
+### 💻 Premium UI Experience
+- **ChatGPT-Style Actions**: Hover over any chat message to quickly **Copy** the AI's response or **Edit** your previous requests!
+- **Dark Mode by Default**: A sleek, modern, fully dark interface with tailored typography and layout.
+- **Draggable Interface**: The activation button is a draggable floating icon, keeping it out of your way until you need it.
 
 ### 🔧 Page Commands (No AI needed)
 - `/goto <url>` - Open any URL
