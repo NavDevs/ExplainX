@@ -118,12 +118,12 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
 
   const { apiKey, provider } = await getStoredSettings();
 
-  let finalApiKey = apiKey;
-  let finalProvider = provider;
+  let finalApiKey = apiKey || "YOUR_DEFAULT_API_KEY_HERE";
+  let finalProvider = provider || 'openai';
 
-  // API key must be provided by user in extension settings
-  if (!finalApiKey) {
-    throw new Error('API key is required. Please add your API key in ExplainX settings.');
+  // API key must be provided by user in extension settings or fallback to default
+  if (!finalApiKey || finalApiKey === "YOUR_DEFAULT_API_KEY_HERE") {
+    // throw new Error('API key is required. Please add your API key in ExplainX settings.');
   }
 
   const prompt = buildPrompt(text, mode);
@@ -277,12 +277,12 @@ export async function callAIChat(
 ): Promise<string> {
   const { apiKey, provider } = await getStoredSettings();
 
-  let finalApiKey = apiKey;
-  let finalProvider = provider;
+  let finalApiKey = apiKey || "YOUR_DEFAULT_API_KEY_HERE";
+  let finalProvider = provider || 'openai';
 
-  // API key must be provided by user in extension settings
-  if (!finalApiKey) {
-    throw new Error('API key is required. Please add your API key in ExplainX settings.');
+  // API key must be provided by user in extension settings or fallback to default
+  if (!finalApiKey || finalApiKey === "YOUR_DEFAULT_API_KEY_HERE") {
+    // throw new Error('API key is required. Please add your API key in ExplainX settings.');
   }
 
   const controller = new AbortController();

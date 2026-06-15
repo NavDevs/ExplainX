@@ -487,6 +487,14 @@
             transition: all 0.3s ease;
         }
 
+        .feature-card.wide {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
         .feature-card:hover .feature-icon {
             color: var(--accent-light);
             border-color: rgba(109, 90, 240, 0.3);
@@ -831,7 +839,7 @@
                     <h3>Keyboard Native</h3>
                     <p>Execute browser commands instantly from the chat input. Hands stay on the keyboard.</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card wide">
                     <div class="feature-icon"><i class="ti ti-world"></i></div>
                     <h3>Universal</h3>
                     <p>Engineered to work flawlessly across any site—from heavy documentation to dense PDFs.</p>

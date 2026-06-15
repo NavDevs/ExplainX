@@ -26,10 +26,6 @@ let isLoading = false;
 let isDarkMode = true;
 let pendingImageUrl: string | null = null; 
 
-chrome.storage.local.get(['isDarkMode'], (result) => {
-  isDarkMode = result.isDarkMode === undefined ? true : !!result.isDarkMode;
-});
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'GET_SELECTION') {
     const selection = window.getSelection();
@@ -227,10 +223,8 @@ async function showChatSidebar() {
   
   if (isDarkMode) {
     overlay.classList.add('dark-mode');
-    toggleBtn.classList.add('dark-mode');
   } else {
     overlay.classList.remove('dark-mode');
-    toggleBtn.classList.remove('dark-mode');
   }
 
   toggleBtn.classList.add('hidden');
@@ -247,9 +241,6 @@ async function showChatSidebar() {
           ExplainX
         </span>
         <div class="header-actions">
-          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark Mode">
-            ${isDarkMode ? '☀️' : '🌙'}
-          </button>
           <button class="header-btn" id="export-chat-btn" title="Export Conversation">Export</button>
           <button class="header-btn" id="clear-chat-btn" title="Clear Chat">Clear</button>
           <button class="explainx-close" id="explainx-close-btn" title="Close">✕</button>
@@ -340,23 +331,6 @@ function exportConversation() {
 }
 
 function attachChatEventListeners() {
-  const themeToggle = document.getElementById('theme-toggle-btn');
-  themeToggle?.addEventListener('click', () => {
-    isDarkMode = !isDarkMode;
-    chrome.storage.local.set({ isDarkMode });
-    const overlay = document.getElementById('explainx-overlay');
-    const toggleBtn = document.getElementById('explainx-toggle-btn');
-    if (isDarkMode) {
-      overlay?.classList.add('dark-mode');
-      toggleBtn?.classList.add('dark-mode');
-      themeToggle.innerHTML = '☀️';
-    } else {
-      overlay?.classList.remove('dark-mode');
-      toggleBtn?.classList.remove('dark-mode');
-      themeToggle.innerHTML = '🌙';
-    }
-  });
-
   document.getElementById('export-chat-btn')?.addEventListener('click', exportConversation);
 
   document.getElementById('explainx-close-btn')?.addEventListener('click', () => {
@@ -434,6 +408,41 @@ function attachChatEventListeners() {
     }
     // Reset file input so the same file can be re-selected
     fileInput.value = '';
+  });
+
+  // Paste image handling
+  document.addEventListener('paste', async (e) => {
+    if (!sidebarVisible) return;
+    
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          try {
+            pendingImageUrl = await resizeAndEncode(file, 800);
+            if (previewContainer) {
+              previewContainer.innerHTML = `
+                <img src="${pendingImageUrl}" alt="preview" />
+                <button class="remove-image" id="remove-image-btn" title="Remove image">✕</button>
+              `;
+              previewContainer.style.display = 'flex';
+              document.getElementById('remove-image-btn')?.addEventListener('click', () => {
+                pendingImageUrl = null;
+                previewContainer.innerHTML = '';
+                previewContainer.style.display = 'none';
+                if (fileInput) fileInput.value = '';
+              });
+            }
+          } catch (err) {
+            console.error('Pasted image processing error:', err);
+          }
+        }
+        break;
+      }
+    }
   });
 }
 

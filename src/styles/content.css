@@ -1,51 +1,26 @@
 #explainx-overlay, #explainx-toggle-btn {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #f1f3f4;
-  --bg-hover: #e8eaed;
-  --border-color: #e0e0e0;
-  --border-focus: #dadce0;
-  --text-primary: #202124;
-  --text-secondary: #5f6368;
-  --text-inverse: #ffffff;
-  --accent-color: #1a73e8;
-  --accent-hover: #1557b0;
-  --accent-light: #e8f0fe;
-  --accent-border: #d2e3fc;
-  --error-color: #d93025;
-  --error-bg: #fce8e6;
-  --code-text: #d93025;
-  --code-bg: #f1f3f4;
-  --pre-bg: #f8f9fa;
-  --shadow-color: rgba(0,0,0,0.1);
-  --shadow-hover: rgba(26,115,232,0.3);
+  --bg-primary: #08080E;
+  --bg-secondary: #0D0D18;
+  --bg-tertiary: #141424;
+  --bg-hover: #1A1A2A;
+  --glass-bg: rgba(8, 8, 14, 0.85);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-focus: rgba(109, 90, 240, 0.4);
+  --text-primary: #F0EEF8;
+  --text-secondary: #6B697E;
+  --text-inverse: #08080E;
+  --accent-color: #6D5AF0;
+  --accent-hover: #9B59F5;
+  --accent-light: rgba(109, 90, 240, 0.15);
+  --accent-border: rgba(109, 90, 240, 0.3);
+  --error-color: #FF5F56;
+  --error-bg: rgba(255, 95, 86, 0.1);
+  --code-text: #FFBD2E;
+  --code-bg: #141424;
+  --pre-bg: #040406;
+  --shadow-color: rgba(0,0,0,0.7);
+  --shadow-hover: rgba(109, 90, 240, 0.3);
   --transition-speed: 0.3s;
-  --glass-bg: rgba(255, 255, 255, 0.85);
-}
-
-#explainx-overlay.dark-mode, #explainx-toggle-btn.dark-mode {
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #2d2d2d;
-  --bg-hover: #3d3d3d;
-  --glass-bg: rgba(18, 18, 18, 0.85);
-  --border-color: #383838;
-  --border-focus: #555555;
-  --text-primary: #e8eaed;
-  --text-secondary: #9aa0a6;
-  --text-inverse: #121212;
-  --accent-color: #8ab4f8;
-  --accent-hover: #aecbfa;
-  --accent-light: rgba(138, 180, 248, 0.15);
-  --accent-border: rgba(138, 180, 248, 0.3);
-  --error-color: #f28b82;
-  --error-bg: rgba(242, 139, 130, 0.1);
-  --code-text: #ff8a65;
-  --code-bg: #2d2d2d;
-  --pre-bg: #1a1a1a;
-  --shadow-color: rgba(0,0,0,0.5);
-  --shadow-hover: rgba(138, 180, 248, 0.3);
-  --glass-bg: rgba(18, 18, 18, 0.85);
 }
 
 #explainx-overlay {
@@ -59,10 +34,10 @@
   line-height: 1.5;
   box-sizing: border-box;
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-left: 1px solid var(--border-color);
-  box-shadow: -4px 0 20px var(--shadow-color);
+  box-shadow: -10px 0 40px var(--shadow-color);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
@@ -167,22 +142,6 @@
 
 .explainx-close:hover {
   color: var(--text-primary);
-}
-
-.theme-toggle-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: var(--text-secondary);
-  transition: color var(--transition-speed), transform 0.2s;
-  padding: 4px;
-  border-radius: 50%;
-}
-
-.theme-toggle-btn:hover {
-  color: var(--text-primary);
-  transform: scale(1.1);
 }
 
 .explainx-modes {
