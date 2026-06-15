@@ -10,27 +10,32 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Tabler Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 
     <style>
         :root {
-            /* Color System */
-            --bg-base: #0C0C0E;
-            --bg-surface: #141416;
-            --bg-surface-elevated: #1A1A1D;
-            --accent: #6C5CE7;
-            --accent-hover: #5A4BCC;
-            --accent-secondary: #3498DB;
-            --text-primary: #F0EFF4;
-            --text-muted: #8B8A96;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(108, 92, 231, 0.3);
+            /* Core Tokens */
+            --bg-page: #060608;
+            --bg-surface: #08080E;
+            --bg-card: #08080E;
+            --bg-card-hover: #0D0D18;
             
-            /* Typography */
-            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --accent: #6D5AF0;
+            --accent-light: #9B59F5;
+            --accent-glow: rgba(109, 90, 240, 0.4);
+            
+            --text-primary: #F0EEF8;
+            --text-muted: #6B697E;
+            --text-faint: #4A4860;
+            --text-ghost: #35334A;
+            
+            --border: rgba(255, 255, 255, 0.06);
+            --border-divider: rgba(255, 255, 255, 0.04);
+            
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
         }
 
@@ -41,13 +46,28 @@
         }
 
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-page);
             color: var(--text-primary);
-            font-family: var(--font-main);
+            font-family: var(--font-sans);
             font-size: 16px;
-            line-height: 1.7;
+            line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Noise Texture */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
         a {
@@ -55,118 +75,149 @@
             color: inherit;
         }
 
-        ul {
-            list-style: none;
-        }
+        ul { list-style: none; }
 
-        /* Reusable Components */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
         }
 
-        .eyebrow {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--accent);
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 64px;
-        }
-
-        h2 {
-            font-size: 32px;
-            font-weight: 600;
+        /* Typography */
+        h1, h2, h3, h4 {
             line-height: 1.2;
-            letter-spacing: -0.01em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 100px;
+            background: rgba(109, 90, 240, 0.1);
+            border: 1px solid rgba(109, 90, 240, 0.2);
+            color: var(--accent-light);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--text-primary), var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .accent-gradient {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border-radius: 8px;
-            font-weight: 500;
+            font-weight: 600;
             font-size: 15px;
             cursor: pointer;
             transition: all 0.2s ease;
-            text-decoration: none;
             gap: 8px;
         }
 
         .btn-primary {
             background-color: var(--accent);
             color: white;
-            border: 1px solid var(--accent);
+            border: none;
+            box-shadow: 0 0 28px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         .btn-primary:hover {
-            background-color: var(--accent-hover);
-            border-color: var(--accent-hover);
+            background-color: var(--accent-light);
+            transform: translateY(-1px);
+            box-shadow: 0 0 36px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .btn-outline {
             background-color: transparent;
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
 
         .btn-outline:hover {
-            border-color: var(--accent);
-            color: var(--text-primary);
-        }
-
-        .btn-accent-outline {
-            background-color: transparent;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-
-        .btn-accent-outline:hover {
-            background-color: var(--accent);
-            color: white;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Animations */
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes messageAppear {
-            from { opacity: 0; transform: translateY(10px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-4px); opacity: 1; }
+        }
+        
+        @keyframes orbitGlow {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
         }
 
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+        /* Ambient Glow Orbs */
+        .ambient-orbs {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: orbitGlow 15s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: var(--accent);
+            top: -100px; left: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: var(--accent-light);
+            top: 20%; right: -50px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 500px; height: 500px;
+            background: #2a1b71;
+            bottom: -200px; left: 20%;
+            animation-delay: -10s;
         }
 
         /* Navbar */
         .navbar {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             z-index: 100;
-            background: rgba(12, 12, 14, 0.7);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(6, 6, 8, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
             padding: 16px 0;
         }
 
@@ -179,16 +230,15 @@
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             font-weight: 700;
-            font-size: 18px;
-            color: white;
+            font-size: 16px;
+            color: var(--text-primary);
         }
 
-        .nav-brand svg {
-            color: var(--accent);
-            width: 20px;
-            height: 20px;
+        .nav-brand img, .nav-brand svg {
+            width: 24px; height: 24px;
+            color: var(--accent-light);
         }
 
         .nav-links {
@@ -198,544 +248,456 @@
 
         .nav-links a {
             font-size: 14px;
+            font-weight: 500;
             color: var(--text-muted);
             transition: color 0.2s;
         }
 
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 24px;
-            cursor: pointer;
-        }
+        .nav-links a:hover { color: var(--text-primary); }
 
         /* Hero Section */
         .hero {
             position: relative;
-            padding: 160px 0 100px;
+            padding: 180px 0 100px;
             min-height: 100vh;
             display: flex;
             align-items: center;
-        }
-
-        .hero-bg-glow {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: -1;
+            z-index: 1;
         }
 
         .hero .container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 64px;
+            gap: 80px;
             align-items: center;
         }
 
         .hero-left h1 {
-            font-size: 56px;
-            font-weight: 700;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
+            font-size: 64px;
+            letter-spacing: -0.03em;
             margin-bottom: 24px;
-            animation: fadeSlideUp 0.8s ease forwards;
+            animation: fadeUp 0.8s ease forwards;
         }
 
         .hero-left p {
             font-size: 18px;
             color: var(--text-muted);
-            max-width: 540px;
+            max-width: 480px;
             margin-bottom: 40px;
-            animation: fadeSlideUp 0.8s ease 0.1s forwards;
+            line-height: 1.7;
+            animation: fadeUp 0.8s ease 0.1s forwards;
             opacity: 0;
         }
 
         .hero-ctas {
             display: flex;
             gap: 16px;
-            margin-bottom: 48px;
-            animation: fadeSlideUp 0.8s ease 0.2s forwards;
+            margin-bottom: 64px;
+            animation: fadeUp 0.8s ease 0.2s forwards;
             opacity: 0;
         }
 
         .social-proof {
             display: flex;
             align-items: center;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--text-muted);
-            animation: fadeSlideUp 0.8s ease 0.3s forwards;
+            gap: 32px;
+            animation: fadeUp 0.8s ease 0.3s forwards;
             opacity: 0;
         }
 
-        .social-proof-divider {
-            width: 1px;
-            height: 12px;
-            background-color: var(--border-color);
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
+        .stat-val { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+        .stat-lbl { font-size: 12px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+        /* Mockup Card */
         .hero-right {
-            perspective: 1000px;
-            animation: fadeSlideUp 1s ease 0.2s forwards;
+            animation: fadeUp 1s ease 0.2s forwards;
             opacity: 0;
+            perspective: 1000px;
         }
 
         .mockup-card {
             background: var(--bg-surface);
-            border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-            transform: rotateY(-5deg) rotateX(5deg);
-            transition: transform 0.5s ease;
-        }
-
-        .mockup-card:hover {
-            transform: rotateY(0) rotateX(0);
+            border: 1px solid var(--border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(109,90,240,0.1);
+            overflow: hidden;
+            width: 380px;
+            margin: 0 auto;
         }
 
         .mockup-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 500;
-            font-size: 14px;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
         }
 
-        .mockup-header i {
-            color: var(--accent);
+        .mockup-dots {
+            display: flex;
+            gap: 6px;
         }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.r { background: #FF5F56; }
+        .dot.y { background: #FFBD2E; }
+        .dot.g { background: #27C93F; }
+
+        .mockup-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-faint);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-body { padding: 24px 20px; }
 
         .chat-msg {
-            margin-bottom: 16px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.5;
+            margin-bottom: 20px;
             opacity: 0;
-            animation: messageAppear 0.5s ease forwards;
+            animation: fadeUp 0.6s ease forwards;
         }
 
-        .msg-user {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-bottom-right-radius: 4px;
-            margin-left: 32px;
-            animation-delay: 0.8s;
+        .chat-msg.user {
+            color: var(--text-muted);
+            font-size: 14px;
+            padding-left: 12px;
+            border-left: 2px solid var(--border);
+            animation-delay: 0.6s;
         }
 
-        .msg-ai {
-            background: rgba(108, 92, 231, 0.1);
-            border: 1px solid rgba(108, 92, 231, 0.2);
+        .chat-msg.ai {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 14px;
             color: var(--text-primary);
-            border-bottom-left-radius: 4px;
-            margin-right: 32px;
-            animation-delay: 1.6s;
+            animation-delay: 1.2s;
+            position: relative;
         }
+        
+        .chat-msg.ai strong { color: var(--accent-light); font-weight: 600; }
+
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            opacity: 0;
+            animation: fadeUp 0.6s ease 1.8s forwards;
+        }
+
+        .typing-dot {
+            width: 6px; height: 6px;
+            background-color: var(--accent-light);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        .mockup-input {
+            margin: 0 20px 20px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-faint);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .mockup-input i { color: var(--accent); }
+
+        /* Logos Section */
+        .logos-section {
+            padding: 40px 0;
+            border-top: 1px solid var(--border-divider);
+            border-bottom: 1px solid var(--border-divider);
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+        
+        .logo-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-faint);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Section Layouts */
+        .section-header { margin-bottom: 64px; max-width: 600px; }
+        .section-header h2 { font-size: 40px; margin-bottom: 16px; letter-spacing: -0.02em; }
+        .section-header p { color: var(--text-muted); font-size: 18px; }
 
         /* Features Section */
-        .features {
-            padding: 120px 0;
-        }
+        .features { padding: 140px 0; position: relative; z-index: 1; }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            background: rgba(255,255,255,0.05); /* seamless divider color */
+            gap: 1px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
         }
 
         .feature-card {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 32px;
-            transition: all 0.3s ease;
+            background: var(--bg-card);
+            padding: 48px 32px;
+            transition: background 0.3s ease;
         }
 
-        .feature-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--border-hover);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2), inset 0 0 20px rgba(108,92,231,0.05);
-        }
+        .feature-card:hover { background: var(--bg-card-hover); }
 
         .feature-icon {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border-radius: 12px;
-            background: rgba(108, 92, 231, 0.1);
-            color: var(--accent);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--text-primary);
             font-size: 24px;
             margin-bottom: 24px;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .feature-card:hover .feature-icon {
-            color: var(--accent-hover);
+            color: var(--accent-light);
+            border-color: rgba(109, 90, 240, 0.3);
+            background: rgba(109, 90, 240, 0.1);
         }
 
-        .feature-card h3 {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 8px;
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+        .feature-card p { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+
+        /* Flow / How It Works Section */
+        .flow-section {
+            padding: 140px 0;
+            border-top: 1px solid var(--border-divider);
         }
 
-        .feature-card p {
-            font-size: 14px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        /* How It Works Section */
-        .how-it-works {
-            padding: 120px 0;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .steps-container {
+        .steps-row {
             display: flex;
             justify-content: space-between;
             position: relative;
-            max-width: 900px;
-            margin: 0 auto;
+            margin-top: 64px;
         }
 
-        .steps-connector {
+        .steps-line {
             position: absolute;
-            top: 24px;
-            left: 40px;
-            right: 40px;
+            top: 28px; left: 60px; right: 60px;
             height: 1px;
-            border-top: 1px dashed var(--text-muted);
-            opacity: 0.3;
+            background: var(--border-divider);
             z-index: 0;
         }
 
-        .step {
+        .step-item {
             position: relative;
             z-index: 1;
-            text-align: center;
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            width: 280px;
         }
 
-        .step-number {
-            width: 48px;
-            height: 48px;
+        .step-num {
+            width: 56px; height: 56px;
             border-radius: 50%;
-            background: var(--bg-base);
-            border: 2px solid var(--accent);
-            color: var(--text-primary);
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--accent-light);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
             font-size: 18px;
             margin-bottom: 24px;
-            box-shadow: 0 0 0 8px var(--bg-surface);
+            box-shadow: 0 0 0 12px var(--bg-page); /* hide line behind circle */
         }
 
-        .step h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .step-item h3 { font-size: 20px; margin-bottom: 12px; }
+        .step-item p { color: var(--text-muted); font-size: 15px; }
+
+        /* Modes Section */
+        .modes-section {
+            padding: 140px 0;
+            border-top: 1px solid var(--border-divider);
         }
 
-        .step p {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        /* AI Modes Section */
-        .modes {
-            padding: 120px 0;
-        }
-
-        .modes-row {
+        .modes-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 16px;
         }
 
-        .mode-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+        .mode-chip {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 24px 16px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            color: var(--text-muted);
         }
 
-        .mode-card:hover, .mode-card.active {
-            border-color: var(--accent);
-            background: var(--bg-surface-elevated);
+        .mode-chip:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
         }
 
-        .mode-icon {
+        .mode-chip.on {
+            background: rgba(109, 90, 240, 0.05);
+            border-color: rgba(109, 90, 240, 0.4);
+            color: var(--text-primary);
+            box-shadow: 0 0 24px rgba(109, 90, 240, 0.1);
+        }
+
+        .mode-chip i {
             font-size: 24px;
-            color: var(--text-muted);
             margin-bottom: 12px;
-            transition: color 0.2s ease;
+            display: block;
+            color: inherit;
         }
 
-        .mode-card:hover .mode-icon, .mode-card.active .mode-icon {
-            color: var(--accent);
+        .mode-chip.on i { color: var(--accent-light); }
+        .mode-chip h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .mode-chip p { font-size: 13px; color: var(--text-faint); }
+
+        /* Commands Section */
+        .commands-section {
+            padding: 140px 0;
+            border-top: 1px solid var(--border-divider);
         }
 
-        .mode-card h4 {
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-
-        .mode-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        /* Page Commands Section */
-        .commands {
-            padding: 120px 0;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .commands .container {
+        .commands-section .container {
             display: grid;
             grid-template-columns: 1fr 1.2fr;
-            gap: 64px;
+            gap: 80px;
             align-items: center;
         }
 
-        .commands-text h2 {
-            text-align: left;
-            margin-bottom: 24px;
-        }
-
-        .commands-text p {
-            color: var(--text-muted);
-            font-size: 16px;
-            margin-bottom: 24px;
-        }
-
         .terminal-block {
-            background: #000;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background: #040406;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 24px;
             font-family: var(--font-mono);
             font-size: 14px;
-            line-height: 1.6;
-            box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+            line-height: 1.8;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            color: #8C8A9E;
         }
 
         .terminal-header {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .term-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .term-dot:nth-child(1) { background: #FF5F56; }
-        .term-dot:nth-child(2) { background: #FFBD2E; }
-        .term-dot:nth-child(3) { background: #27C93F; }
-
-        .term-line {
-            display: flex;
-            gap: 16px;
-        }
-
-        .term-gutter {
-            color: #555;
-            user-select: none;
-            text-align: right;
-            min-width: 20px;
-        }
-
-        .term-code {
-            color: #A9B7C6;
-        }
-        
-        .term-cmd { color: var(--accent); font-weight: bold; }
-        .term-desc { color: #808080; }
+        .term-keyword { color: #A89FFF; font-weight: 500; }
+        .term-comment { color: #514F6A; }
+        .term-string { color: #E8E6F5; }
+        .term-line { display: flex; gap: 16px; }
+        .term-num { color: #35334A; user-select: none; width: 20px; text-align: right; }
 
         /* CTA Section */
         .cta-section {
-            padding: 140px 0;
+            padding: 160px 0;
             text-align: center;
+            border-top: 1px solid transparent;
+            border-image: linear-gradient(90deg, transparent, rgba(109,90,240,0.4), transparent) 1;
             position: relative;
-            overflow: hidden;
-            border-top: 1px solid var(--border-color);
         }
 
-        .cta-bg-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .cta-section h2 {
-            font-size: 40px;
-            margin-bottom: 16px;
-        }
-
-        .cta-section p {
-            color: var(--text-muted);
-            font-size: 18px;
-            margin-bottom: 40px;
-        }
-
-        .cta-meta {
-            margin-top: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .cta-meta a {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: color 0.2s;
-        }
-
-        .cta-meta a:hover {
-            color: var(--text-primary);
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 100px;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-color);
-            font-size: 12px;
-        }
+        .cta-section h2 { font-size: 48px; margin-bottom: 24px; letter-spacing: -0.03em; }
+        .cta-section p { color: var(--text-muted); font-size: 18px; margin-bottom: 48px; }
 
         /* Footer */
         .footer {
-            padding: 40px 0;
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-base);
+            padding: 48px 0;
+            border-top: 1px solid var(--border-divider);
         }
 
         .footer .container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .footer-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .footer-left svg {
-            color: var(--accent);
-        }
-
-        .footer-nav {
-            display: flex;
-            gap: 32px;
-        }
-
-        .footer-nav a {
-            color: var(--text-muted);
+            color: var(--text-faint);
             font-size: 14px;
-            transition: color 0.2s;
         }
-
-        .footer-nav a:hover {
-            color: var(--text-primary);
+        
+        .footer-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 600; color: var(--text-muted);
         }
+        
+        .footer-brand svg { color: var(--accent); width: 20px; height: 20px; }
 
-        .footer-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            color: var(--text-muted);
-            font-size: 13px;
+        .footer-links {
+            display: flex; gap: 32px;
         }
+        
+        .footer-links a { transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text-muted); }
 
-        /* Mobile Adjustments */
-        @media (max-width: 992px) {
-            .hero .container, .commands .container {
-                grid-template-columns: 1fr;
-            }
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .modes-row {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero .container, .commands-section .container { grid-template-columns: 1fr; gap: 64px; }
+            .hero-right { order: -1; max-width: 400px; margin: 0 auto; }
+            .hero-left { text-align: center; }
+            .hero-left p { margin: 0 auto 40px; }
+            .hero-ctas, .social-proof { justify-content: center; }
+            
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .modes-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
         @media (max-width: 768px) {
-            .nav-links, .nav-right { display: none; }
-            .mobile-menu-btn { display: block; }
-            
-            .hero-left h1 { font-size: 40px; }
-            .hero { padding: 120px 0 80px; }
+            .nav-links { display: none; }
+            .hero { padding: 140px 0 80px; }
+            .hero-left h1 { font-size: 48px; }
             
             .features-grid { grid-template-columns: 1fr; }
-            .modes-row { grid-template-columns: 1fr; }
+            .modes-grid { grid-template-columns: 1fr; }
             
-            .steps-connector { display: none; }
-            .steps-container { flex-direction: column; gap: 48px; align-items: center; }
+            .steps-line { display: none; }
+            .steps-row { flex-direction: column; gap: 48px; align-items: center; text-align: center; }
             
+            .cta-section h2 { font-size: 36px; }
             .footer .container { flex-direction: column; gap: 24px; text-align: center; }
-            .footer-nav { flex-direction: column; gap: 16px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Ambient background orbs -->
+    <div class="ambient-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
 
     <!-- Navbar -->
     <nav class="navbar">
@@ -748,76 +710,96 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#download">Download</a></li>
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="#commands">Commands</a></li>
                 <li><a href="#faq">FAQ</a></li>
             </ul>
-            <div class="nav-right">
-                <a href="#download" class="btn btn-accent-outline">Download Free</a>
-            </div>
-            <button class="mobile-menu-btn">
-                <i class="ti ti-menu-2"></i>
-            </button>
+            <a href="https://github.com/NavDevs/ExplainX" class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;">GitHub</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero -->
     <section class="hero">
-        <div class="hero-bg-glow"></div>
         <div class="container">
             <div class="hero-left">
-                <span class="eyebrow">AI-Powered Chrome Extension</span>
-                <h1>Understand anything on the web — instantly.</h1>
+                <div class="eyebrow"><i class="ti ti-sparkles"></i> AI-Powered Chrome Extension</div>
+                <h1>Understand anything on the web — <span class="accent-gradient">instantly.</span></h1>
                 <p>Select any text on any webpage and get clear, AI-powered explanations in seconds. Built for students, developers, and curious minds.</p>
                 
                 <div class="hero-ctas">
                     <a href="#download" class="btn btn-primary">Download Free</a>
-                    <a href="#how-it-works" class="btn btn-outline">See How It Works</a>
+                    <a href="#features" class="btn btn-outline">See How It Works <i class="ti ti-arrow-right"></i></a>
                 </div>
                 
                 <div class="social-proof">
-                    <span>100% Free</span>
-                    <div class="social-proof-divider"></div>
-                    <span>5+ AI Modes</span>
-                    <div class="social-proof-divider"></div>
-                    <span>Zero Data Collection</span>
+                    <div class="stat-item">
+                        <span class="stat-val">100%</span>
+                        <span class="stat-lbl">Free</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val">5+</span>
+                        <span class="stat-lbl">AI Modes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val">Zero</span>
+                        <span class="stat-lbl">Data Coll.</span>
+                    </div>
                 </div>
             </div>
             
             <div class="hero-right">
                 <div class="mockup-card">
                     <div class="mockup-header">
-                        <i class="ti ti-bolt"></i> ExplainX Chat
+                        <div class="mockup-dots">
+                            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                        </div>
+                        <div class="mockup-title">⚡ ExplainX Chat</div>
+                        <div style="width:40px;"></div>
                     </div>
                     <div class="mockup-body">
-                        <div class="chat-msg msg-user">
+                        <div class="chat-msg user">
                             "Quantum entanglement is a physical phenomenon that occurs when a group of particles are generated..."
                         </div>
-                        <div class="chat-msg msg-ai">
-                            <strong>Simply put:</strong> Quantum entanglement is like having two magical dice. When you roll one and get a 6, the other die instantly becomes a 6 too, even if it's on the other side of the universe. They are invisibly connected.
+                        <div class="chat-msg ai">
+                            <strong>Simply put:</strong> Quantum entanglement is like having two magical dice. When you roll one and get a 6, the other die instantly becomes a 6 too. They are invisibly connected.
                         </div>
-                        <div class="chat-msg msg-user">
-                            Who discovered this?
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
                         </div>
+                    </div>
+                    <div class="mockup-input">
+                        <span>Ask a follow up...</span>
+                        <i class="ti ti-send"></i>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    
+    <div class="logos-section">
+        <div class="logo-item"><i class="ti ti-brand-react"></i> React Native</div>
+        <div class="logo-item"><i class="ti ti-brand-python"></i> Python Docs</div>
+        <div class="logo-item"><i class="ti ti-book"></i> Wikipedia</div>
+        <div class="logo-item"><i class="ti ti-news"></i> NY Times</div>
+        <div class="logo-item"><i class="ti ti-code"></i> GitHub Repos</div>
+    </div>
 
-    <!-- Features Section -->
-    <section id="features" class="features fade-in">
+    <!-- Features -->
+    <section id="features" class="features">
         <div class="container">
             <div class="section-header">
                 <span class="eyebrow">Features</span>
-                <h2>Everything you need to learn faster</h2>
+                <h2>Everything you need <br>to learn faster</h2>
+                <p>Powerful tools carefully designed to integrate seamlessly into your reading workflow.</p>
             </div>
             
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon"><i class="ti ti-brain"></i></div>
                     <h3>5 AI Modes</h3>
-                    <p>Switch between Simple, Student, Code, Interview, or Summary modes to tailor the explanation to your needs.</p>
+                    <p>Switch between Simple, Student, Code, Interview, or Summary modes to tailor the explanation to your exact needs.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="ti ti-message-chatbot"></i></div>
@@ -825,14 +807,14 @@
                     <p>Don't just read—ask follow-up questions directly in the extension sidebar until you fully grasp the concept.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="ti ti-drag-drop"></i></div>
-                    <h3>Draggable Toggle</h3>
-                    <p>A non-intrusive floating button that appears right near your selected text. Move it anywhere you like.</p>
-                </div>
-                <div class="feature-card">
                     <div class="feature-icon"><i class="ti ti-shield-lock"></i></div>
                     <h3>Privacy First</h3>
                     <p>Your browsing history stays yours. Only the text you explicitly select is sent to the AI for processing.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-drag-drop"></i></div>
+                    <h3>Draggable Toggle</h3>
+                    <p>A non-intrusive floating button that appears right near your selected text. Move it anywhere you like.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="ti ti-terminal-2"></i></div>
@@ -848,134 +830,139 @@
         </div>
     </section>
 
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="how-it-works fade-in">
+    <!-- Flow -->
+    <section id="how" class="flow-section">
         <div class="container">
             <div class="section-header">
+                <span class="eyebrow">Workflow</span>
                 <h2>Three steps to instant clarity</h2>
             </div>
             
-            <div class="steps-container">
-                <div class="steps-connector"></div>
-                
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3>Select</h3>
-                    <p>Highlight any confusing text on any webpage you are currently reading.</p>
+            <div class="steps-row">
+                <div class="steps-line"></div>
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <h3>Select text</h3>
+                    <p>Highlight any confusing sentence or paragraph on the page you are reading.</p>
                 </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h3>Ask</h3>
-                    <p>Click the ExplainX toggle that appears to get an instant explanation.</p>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <h3>Invoke ExplainX</h3>
+                    <p>Click the floating lightning toggle or press Cmd+Shift+E.</p>
                 </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h3>Explore</h3>
-                    <p>Ask follow-up questions in the chat sidebar to dive deeper into the topic.</p>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <h3>Learn & Follow up</h3>
+                    <p>Read the AI explanation and ask clarification questions in the chat.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- AI Modes Section -->
-    <section class="modes fade-in">
+    <!-- Modes -->
+    <section class="modes-section">
         <div class="container">
             <div class="section-header">
+                <span class="eyebrow">Versatility</span>
                 <h2>Pick your learning style</h2>
+                <p>Switch modes instantly based on the context of what you're reading.</p>
             </div>
             
-            <div class="modes-row">
-                <div class="mode-card active">
-                    <i class="ti ti-bulb mode-icon"></i>
+            <div class="modes-grid">
+                <div class="mode-chip on" onclick="toggleMode(this)">
+                    <i class="ti ti-bulb"></i>
                     <h4>Simple</h4>
                     <p>ELI5 style for everyday concepts</p>
                 </div>
-                <div class="mode-card">
-                    <i class="ti ti-school mode-icon"></i>
+                <div class="mode-chip" onclick="toggleMode(this)">
+                    <i class="ti ti-school"></i>
                     <h4>Student</h4>
                     <p>Academic tone with citations</p>
                 </div>
-                <div class="mode-card">
-                    <i class="ti ti-code mode-icon"></i>
+                <div class="mode-chip" onclick="toggleMode(this)">
+                    <i class="ti ti-code"></i>
                     <h4>Code</h4>
                     <p>Line-by-line syntax breakdown</p>
                 </div>
-                <div class="mode-card">
-                    <i class="ti ti-briefcase mode-icon"></i>
+                <div class="mode-chip" onclick="toggleMode(this)">
+                    <i class="ti ti-briefcase"></i>
                     <h4>Interview</h4>
                     <p>Prep for technical questions</p>
                 </div>
-                <div class="mode-card">
-                    <i class="ti ti-file-text mode-icon"></i>
+                <div class="mode-chip" onclick="toggleMode(this)">
+                    <i class="ti ti-list"></i>
                     <h4>Summary</h4>
-                    <p>Quick bullet points of key facts</p>
+                    <p>Quick bullet points of facts</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Page Commands Section -->
-    <section class="commands fade-in">
+    <!-- Commands Section -->
+    <section id="commands" class="commands-section">
         <div class="container">
-            <div class="commands-text">
-                <span class="eyebrow">Built-in power commands</span>
-                <h2>Keyboard first. Mouse optional.</h2>
-                <p>Sometimes you need more than just a selected text explanation. ExplainX includes built-in slash commands that let you run powerful prompts against the entire page you're viewing.</p>
-                <p>Just open the sidebar and type a slash to see available commands.</p>
+            <div>
+                <div class="section-header">
+                    <span class="eyebrow">Power Users</span>
+                    <h2>Control your browser from the chat</h2>
+                    <p>Sometimes you need more than just a selected text explanation. ExplainX includes built-in slash commands that let you run powerful prompts against the entire page.</p>
+                </div>
             </div>
             
             <div class="terminal-block">
                 <div class="terminal-header">
-                    <div class="term-dot"></div>
-                    <div class="term-dot"></div>
-                    <div class="term-dot"></div>
+                    <div class="mockup-dots">
+                        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                    </div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">1</div>
-                    <div class="term-code"><span class="term-desc">// Available ExplainX Commands</span></div>
+                    <div class="term-num">1</div>
+                    <div class="term-comment">// Available Context Commands</div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">2</div>
-                    <div class="term-code"><span class="term-cmd">/summarize</span> <span class="term-desc">Generate a concise summary of the page</span></div>
+                    <div class="term-num">2</div>
+                    <div><span class="term-keyword">/summarize</span> <span class="term-string">"Concise page summary"</span></div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">3</div>
-                    <div class="term-code"><span class="term-cmd">/tldr</span>      <span class="term-desc">Get the top 3 key takeaways instantly</span></div>
+                    <div class="term-num">3</div>
+                    <div><span class="term-keyword">/tldr</span>      <span class="term-string">"Top 3 key takeaways"</span></div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">4</div>
-                    <div class="term-code"><span class="term-cmd">/explain</span>   <span class="term-desc">Simplify the current page's core thesis</span></div>
+                    <div class="term-num">4</div>
+                    <div><span class="term-keyword">/action</span>    <span class="term-string">"Extract action items"</span></div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">5</div>
-                    <div class="term-code"><span class="term-cmd">/action</span>    <span class="term-desc">Extract action items and next steps</span></div>
+                    <div class="term-num">5</div>
+                    <div><span class="term-keyword">/explain</span>   <span class="term-string">"Simplify the core thesis"</span></div>
                 </div>
                 <div class="term-line">
-                    <div class="term-gutter">6</div>
-                    <div class="term-code"><span class="term-cmd">/quiz</span>      <span class="term-desc">Generate a quick 3-question test</span></div>
+                    <div class="term-num">6</div>
+                    <div class="term-comment">// Programming Commands</div>
+                </div>
+                <div class="term-line">
+                    <div class="term-num">7</div>
+                    <div><span class="term-keyword">/debug</span>     <span class="term-string">"Find errors in selected code"</span></div>
+                </div>
+                <div class="term-line">
+                    <div class="term-num">8</div>
+                    <div><span class="term-keyword">/refactor</span>  <span class="term-string">"Suggest cleaner syntax"</span></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Download / CTA Section -->
-    <section id="download" class="cta-section fade-in">
-        <div class="cta-bg-glow"></div>
+    <!-- CTA -->
+    <section id="download" class="cta-section">
         <div class="container">
-            <h2>Start understanding more, right now.</h2>
+            <h2>Start understanding more, <span class="accent-gradient">right now.</span></h2>
             <p>Free forever. No account needed. No data collected.</p>
             
-            <a href="https://github.com/NavDevs/ExplainX" class="btn btn-primary" style="padding: 16px 32px; font-size: 16px;">
+            <a href="https://github.com/NavDevs/ExplainX" class="btn btn-primary" style="padding: 16px 40px; font-size: 16px;">
                 <i class="ti ti-brand-chrome"></i> Add to Chrome — It's Free
             </a>
             
-            <div class="cta-meta">
-                <a href="https://github.com/NavDevs/ExplainX" target="_blank">
-                    <i class="ti ti-brand-github"></i> View Source on GitHub
-                </a>
-                <span class="badge">MIT License</span>
+            <div style="margin-top: 24px; color: var(--text-faint); font-size: 13px;">
+                Open source under the MIT License
             </div>
         </div>
     </section>
@@ -983,58 +970,28 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-left">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="footer-brand">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
                 ExplainX
             </div>
-            
-            <div class="footer-nav">
+            <div class="footer-links">
                 <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="https://github.com/NavDevs/ExplainX/issues" target="_blank">Support</a>
+                <a href="#how">How it Works</a>
+                <a href="https://github.com/NavDevs/ExplainX">GitHub</a>
             </div>
-            
-            <div class="footer-right">
-                <span>Made with <span style="color: #e25555;">❤️</span> for learners everywhere</span>
-                <span>•</span>
-                <span>MIT License</span>
+            <div>
+                Built with ❤️ for learners everywhere
             </div>
         </div>
     </footer>
 
-    <!-- Intersection Observer for fade-in animations -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const observerOptions = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.15
-            };
-
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
-
-            document.querySelectorAll('.fade-in').forEach(element => {
-                observer.observe(element);
-            });
-            
-            // Mode card interaction (visual only)
-            const modeCards = document.querySelectorAll('.mode-card');
-            modeCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    modeCards.forEach(c => c.classList.remove('active'));
-                    card.classList.add('active');
-                });
-            });
-        });
+        function toggleMode(element) {
+            document.querySelectorAll('.mode-chip').forEach(el => el.classList.remove('on'));
+            element.classList.add('on');
+        }
     </script>
 </body>
 </html>
