@@ -271,10 +271,13 @@ async function showChatSidebar() {
 function renderChatMessage(msg: ChatMessage): string {
   if (msg.role === 'user') {
     const imageHtml = msg.imageUrl ? `<img class="chat-image" src="${msg.imageUrl}" alt="Uploaded image" />` : '';
-    return `<div class="chat-message user">${imageHtml}${escapeHtml(msg.content)}</div>`;
+    return `<div class="chat-message user"><div class="message-content">${imageHtml}${escapeHtml(msg.content)}</div></div>`;
   } else {
     const rawHtml = marked.parse(msg.content) as string;
-    return `<div class="chat-message assistant">${rawHtml}</div>`;
+    const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(msg.content)}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>`;
+    return `<div class="chat-message assistant"><div class="message-content">${rawHtml}</div><div class="message-actions">${copyBtn}</div></div>`;
   }
 }
 
@@ -441,6 +444,33 @@ function attachChatEventListeners() {
           }
         }
         break;
+      }
+    }
+  });
+
+  // Action buttons delegation
+  const chatBody = document.getElementById('chat-body');
+  chatBody?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('.message-action-btn') as HTMLButtonElement;
+    if (!btn) return;
+
+    const content = btn.getAttribute('data-content') || '';
+
+    if (btn.classList.contains('copy-btn')) {
+      navigator.clipboard.writeText(content).then(() => {
+        const originalTitle = btn.title;
+        btn.title = 'Copied!';
+        // Force tooltip or visual feedback if possible, or just log
+        setTimeout(() => { btn.title = originalTitle; }, 2000);
+      });
+    } else if (btn.classList.contains('edit-btn')) {
+      const input = document.getElementById('chat-input') as HTMLTextAreaElement;
+      if (input) {
+        input.value = content;
+        input.focus();
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
       }
     }
   });
