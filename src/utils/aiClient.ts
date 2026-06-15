@@ -13,7 +13,7 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-flash-latest',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.2-90b-vision-preview',
+  groq: 'meta-llama/llama-4-scout-17b-16e-instruct',
 };
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
