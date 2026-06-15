@@ -460,9 +460,16 @@ function attachChatEventListeners() {
     if (btn.classList.contains('copy-btn')) {
       navigator.clipboard.writeText(content).then(() => {
         const originalTitle = btn.title;
+        const originalHtml = btn.innerHTML;
         btn.title = 'Copied!';
-        // Force tooltip or visual feedback if possible, or just log
-        setTimeout(() => { btn.title = originalTitle; }, 2000);
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        btn.classList.add('copied');
+        
+        setTimeout(() => { 
+          btn.title = originalTitle; 
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('copied');
+        }, 2000);
       });
     } else if (btn.classList.contains('edit-btn')) {
       const input = document.getElementById('chat-input') as HTMLTextAreaElement;

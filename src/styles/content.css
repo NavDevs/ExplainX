@@ -392,6 +392,53 @@ hr {
   line-height: 1.6;
   font-size: 14px;
   word-wrap: break-word;
+  position: relative;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.chat-message:hover .message-actions {
+  opacity: 1;
+}
+
+.message-action-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.message-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.message-action-btn.copied {
+  transform: scale(1.15);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.chat-message.user .message-action-btn {
+  color: var(--text-inverse);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+}
+
+.chat-message.user .message-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .chat-message.user {
