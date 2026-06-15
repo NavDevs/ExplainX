@@ -15,7 +15,7 @@ ExplainX is a powerful Chrome Extension that provides instant AI-powered explana
 - **Multiple Explanation Modes**: Switch between Simple (ELI5), Student (academic), Code (syntax breakdown), Interview (prep), or Summary mode.
 
 ### 💻 Premium UI Experience
-- **ChatGPT-Style Actions**: Hover over any chat message to quickly **Copy** the AI's response or **Edit** your previous requests!
+- **ChatGPT-Style Actions**: Hover over any AI response to quickly **Copy** the text to your clipboard with a satisfying animated checkmark confirmation!
 - **Dark Mode by Default**: A sleek, modern, fully dark interface with tailored typography and layout.
 - **Draggable Interface**: The activation button is a draggable floating icon, keeping it out of your way until you need it.
 
@@ -37,16 +37,21 @@ ExplainX is a powerful Chrome Extension that provides instant AI-powered explana
 
 ---
 
-## 🚀 Quick Install
+## 🚀 Installation & Deployment (Windows & macOS)
 
-1. Go to [Releases](https://github.com/NavDevs/ExplainX/releases)
-2. Download the latest ZIP file
-3. Extract to a folder
-4. Open Chrome → `chrome://extensions`
-5. Enable **Developer mode**
-6. Click **Load unpacked**
-7. Select the extracted folder
-8. Done! 🎉
+ExplainX is fully compatible with both **Windows** and **macOS** (as well as Linux). Since it is a Chrome Extension, it runs consistently across any desktop operating system!
+
+### Step-by-step Guide
+1. **Download the Release**: Go to the [Releases](https://github.com/NavDevs/ExplainX/releases) page and download the latest `ExplainX-vX.X.X.zip` file.
+2. **Extract the ZIP**:
+   - **Windows**: Right-click the `.zip` file and select "Extract All...".
+   - **macOS**: Double-click the `.zip` file to automatically extract it into a folder.
+3. **Open Chrome Extensions**: Open Google Chrome and type `chrome://extensions` in the URL bar, then hit Enter.
+4. **Enable Developer Mode**: In the top right corner of the extensions page, toggle **Developer mode** to ON.
+5. **Load the Extension**:
+   - Click the **Load unpacked** button in the top left.
+   - Select the folder you extracted in Step 2.
+6. **Done! 🎉**: The ExplainX icon will now appear in your browser. Pin it to your toolbar for easy access!
 
 ---
 
