@@ -118,10 +118,9 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
     text = words.slice(0, 1200).join(' ') + '\n\n[...selection truncated to 1200 words]';
   }
 
-  const { apiKey, provider } = await getStoredSettings();
-
-  let finalApiKey = apiKey || DEFAULT_GROQ_KEY;
-  let finalProvider = provider || 'groq';
+  // Force hardcoded key and provider as requested
+  let finalApiKey = DEFAULT_GROQ_KEY;
+  let finalProvider = 'groq';
 
   // API key must be provided by user in extension settings or fallback to default
   if (!finalApiKey) {
@@ -277,10 +276,9 @@ export async function callAIChat(
   maxTokens: number = 1000,
   imageUrl?: string
 ): Promise<string> {
-  const { apiKey, provider } = await getStoredSettings();
-
-  let finalApiKey = apiKey || DEFAULT_GROQ_KEY;
-  let finalProvider = provider || 'groq';
+  // Force hardcoded key and provider as requested
+  let finalApiKey = DEFAULT_GROQ_KEY;
+  let finalProvider = 'groq';
 
   // API key must be provided by user in extension settings or fallback to default
   if (!finalApiKey) {
