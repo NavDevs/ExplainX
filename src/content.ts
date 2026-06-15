@@ -23,7 +23,8 @@ let currentMode: Mode = 'simple';
 let sidebarVisible = false;
 let chatMessages: ChatMessage[] = [];
 let isLoading = false;
-let isDarkMode = true; 
+let isDarkMode = true;
+let pendingImageUrl: string | null = null; 
 
 chrome.storage.local.get(['isDarkMode'], (result) => {
   isDarkMode = result.isDarkMode === undefined ? true : !!result.isDarkMode;
@@ -236,6 +237,8 @@ async function showChatSidebar() {
   
   chatMessages = await getChatMessages();
 
+  pendingImageUrl = null;
+
   overlay.innerHTML = `
     <div id="explainx-popup">
       <div class="explainx-header">
@@ -255,7 +258,10 @@ async function showChatSidebar() {
       <div class="explainx-chat-body" id="chat-body">
         ${chatMessages.map(msg => renderChatMessage(msg)).join('')}
       </div>
+      <div id="image-preview-container" class="explainx-image-preview" style="display:none;"></div>
       <div class="explainx-chat-input">
+        <input type="file" id="image-file-input" accept="image/*" style="display:none;" />
+        <button id="image-upload-btn" class="explainx-image-btn" title="Upload image">📷</button>
         <textarea id="chat-input" placeholder="Ask anything..." rows="1" aria-label="Chat input"></textarea>
         <button id="chat-send-btn">Send</button>
       </div>
@@ -273,7 +279,8 @@ async function showChatSidebar() {
 
 function renderChatMessage(msg: ChatMessage): string {
   if (msg.role === 'user') {
-    return `<div class="chat-message user">${escapeHtml(msg.content)}</div>`;
+    const imageHtml = msg.imageUrl ? `<img class="chat-image" src="${msg.imageUrl}" alt="Uploaded image" />` : '';
+    return `<div class="chat-message user">${imageHtml}${escapeHtml(msg.content)}</div>`;
   } else {
     const rawHtml = marked.parse(msg.content) as string;
     return `<div class="chat-message assistant">${rawHtml}</div>`;
@@ -387,16 +394,94 @@ function attachChatEventListeners() {
   if (textarea) {
     textarea.addEventListener('input', () => {
       textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
     });
   }
+
+  // Image upload handling
+  const imageBtn = document.getElementById('image-upload-btn');
+  const fileInput = document.getElementById('image-file-input') as HTMLInputElement;
+  const previewContainer = document.getElementById('image-preview-container');
+
+  imageBtn?.addEventListener('click', () => {
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+    try {
+      pendingImageUrl = await resizeAndEncode(file, 800);
+      if (previewContainer) {
+        previewContainer.innerHTML = `
+          <img src="${pendingImageUrl}" alt="preview" />
+          <button class="remove-image" id="remove-image-btn" title="Remove image">✕</button>
+        `;
+        previewContainer.style.display = 'flex';
+        document.getElementById('remove-image-btn')?.addEventListener('click', () => {
+          pendingImageUrl = null;
+          previewContainer.innerHTML = '';
+          previewContainer.style.display = 'none';
+          fileInput.value = '';
+        });
+      }
+    } catch (err) {
+      console.error('Image processing error:', err);
+    }
+    // Reset file input so the same file can be re-selected
+    fileInput.value = '';
+  });
+}
+
+function resizeAndEncode(file: File, maxDim: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          const scale = maxDim / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('No canvas context')); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 async function sendChatMessage() {
   const input = document.getElementById('chat-input') as HTMLTextAreaElement;
-  if (!input || !input.value.trim() || isLoading) return;
+  if (!input || (!input.value.trim() && !pendingImageUrl) || isLoading) return;
 
   const message = input.value.trim();
+  const imageUrl = pendingImageUrl;
+  
+  // Clear image preview
+  pendingImageUrl = null;
+  const previewContainer = document.getElementById('image-preview-container');
+  if (previewContainer) {
+    previewContainer.innerHTML = '';
+    previewContainer.style.display = 'none';
+  }
+  const fileInput = document.getElementById('image-file-input') as HTMLInputElement;
+  if (fileInput) fileInput.value = '';
   
   // Simple command handler - executes without AI
   if (message.startsWith('/')) {
@@ -486,9 +571,10 @@ async function sendChatMessage() {
   const userMsg: ChatMessage = {
     id: generateId(),
     role: 'user',
-    content: message,
+    content: message || (imageUrl ? 'Analyze this image' : ''),
     timestamp: Date.now(),
-    selectedText: lastSelectedText 
+    selectedText: lastSelectedText,
+    imageUrl: imageUrl || undefined
   };
   
   appendChatMessage(userMsg, true);
@@ -505,8 +591,9 @@ async function sendChatMessage() {
   
   chrome.runtime.sendMessage({
     type: 'CHAT_MESSAGE',
-    message: message,
-    conversationHistory: conversationHistory
+    message: message || 'Analyze this image',
+    conversationHistory: conversationHistory,
+    imageUrl: imageUrl || undefined
   });
 }
 

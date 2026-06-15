@@ -9,6 +9,7 @@ export interface ChatMessage {
   timestamp: number;
   mode?: Mode; // Optional: for text explanations
   selectedText?: string; // Optional: if message was from text selection
+  imageUrl?: string; // Optional: base64 data URL of an attached image
 }
 
 export interface ChatSession {

@@ -104,7 +104,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const tabId = sender.tab?.id;
     if (!tabId) return false;
     
-    const { message, conversationHistory } = request;
+    const { message, conversationHistory, imageUrl } = request;
     
     // Find the most recent selected text context (if any)
     const lastSelectedText = conversationHistory
@@ -126,7 +126,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       { role: 'user', content: message }
     ];
     
-    callAIChat(aiMessages)
+    callAIChat(aiMessages, 1000, imageUrl)
       .then((response) => {
         const assistantMsg: ChatMessage = {
           id: generateId(),

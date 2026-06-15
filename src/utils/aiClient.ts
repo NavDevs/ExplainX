@@ -271,8 +271,9 @@ async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal
 
 // Chat-specific AI call with conversation history
 export async function callAIChat(
-  messages: Array<{role: 'user' | 'assistant' | 'system', content: string}>,
-  maxTokens: number = 1000
+  messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[]}>,
+  maxTokens: number = 1000,
+  imageUrl?: string
 ): Promise<string> {
   const { apiKey, provider } = await getStoredSettings();
 
@@ -286,6 +287,21 @@ export async function callAIChat(
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for chat
+
+  // If imageUrl is provided, modify the last user message to include the image
+  if (imageUrl) {
+    const lastUserIdx = messages.map(m => m.role).lastIndexOf('user');
+    if (lastUserIdx !== -1) {
+      const userMsg = messages[lastUserIdx];
+      const textContent = typeof userMsg.content === 'string' ? userMsg.content : '';
+      // Format depends on provider, but we prepare a generic structure here
+      // Individual provider functions will handle their own format
+      messages[lastUserIdx] = {
+        ...userMsg,
+        content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: imageUrl } }]
+      };
+    }
+  }
 
   try {
     return await requestQueue.add(async () => {
@@ -311,7 +327,7 @@ export async function callAIChat(
 
 // OpenAI-compatible chat endpoint (works for OpenAI, Groq)
 async function callOpenAIChat(
-  messages: Array<{role: string, content: string}>,
+  messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
   maxTokens: number
@@ -336,7 +352,7 @@ async function callOpenAIChat(
 }
 
 async function callGroqChat(
-  messages: Array<{role: string, content: string}>,
+  messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
   maxTokens: number
@@ -367,7 +383,7 @@ async function callGroqChat(
 
 // Gemini chat endpoint
 async function callGeminiChat(
-  messages: Array<{role: string, content: string}>,
+  messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
   maxTokens: number
@@ -375,15 +391,31 @@ async function callGeminiChat(
   // Gemini doesn't support system messages, convert to user message
   const geminiMessages = messages.map(msg => {
     if (msg.role === 'system') {
-      return { role: 'user', content: `System: ${msg.content}` };
+      return { role: 'user', content: typeof msg.content === 'string' ? `System: ${msg.content}` : msg.content };
     }
     return msg;
   });
 
-  // Gemini expects different format
-  const contents = geminiMessages.map(msg => ({
-    parts: [{ text: msg.content }]
-  }));
+  // Gemini expects different format - handle image content
+  const contents = geminiMessages.map(msg => {
+    if (Array.isArray(msg.content)) {
+      const parts: any[] = [];
+      for (const part of msg.content) {
+        if (part.type === 'text') {
+          parts.push({ text: part.text });
+        } else if (part.type === 'image_url' && part.image_url?.url) {
+          // Parse base64 data URL
+          const dataUrl = part.image_url.url;
+          const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+          if (match) {
+            parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+          }
+        }
+      }
+      return { parts };
+    }
+    return { parts: [{ text: msg.content as string }] };
+  });
 
   const url = `${API_ENDPOINTS['gemini']}?key=${encodeURIComponent(apiKey)}`;
   const res = await fetch(url, {
@@ -431,14 +463,31 @@ async function callGeminiChat(
 
 // Anthropic chat endpoint
 async function callAnthropicChat(
-  messages: Array<{role: string, content: string}>,
+  messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
   maxTokens: number
 ): Promise<string> {
   // Extract system message
   const systemMessage = messages.find(msg => msg.role === 'system');
-  const conversationMessages = messages.filter(msg => msg.role !== 'system');
+  const conversationMessages = messages.filter(msg => msg.role !== 'system').map(msg => {
+    if (Array.isArray(msg.content)) {
+      const anthropicContent: any[] = [];
+      for (const part of msg.content) {
+        if (part.type === 'text') {
+          anthropicContent.push({ type: 'text', text: part.text });
+        } else if (part.type === 'image_url' && part.image_url?.url) {
+          const dataUrl = part.image_url.url;
+          const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+          if (match) {
+            anthropicContent.push({ type: 'image', source: { type: 'base64', media_type: match[1], data: match[2] } });
+          }
+        }
+      }
+      return { role: msg.role, content: anthropicContent };
+    }
+    return msg;
+  });
 
   const res = await fetchWithRetry(API_ENDPOINTS['anthropic'], {
     method: 'POST',

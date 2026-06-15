@@ -9,16 +9,10 @@ ExplainX is a powerful Chrome Extension that provides instant AI-powered explana
 ## ✨ Features
 
 ### 🎯 Multiple AI Modes
-- **Simple** - Easy explanations for anyone (ELI5)
-- **Student** - Detailed explanations with examples
-- **Beginner Code** - Code explanations for new developers
-- **Interview** - Interview-focused technical prep
-- **Summary** - Quick summaries of complex topics
-
-### 💬 Interactive Chat
-- Ask follow-up questions
-- Get deeper explanations
-- Conversation history saved locally
+- **Multiple Explanation Modes:** Switch between Simple (ELI5), Student (academic), Code (syntax breakdown), Interview (prep), or Summary mode.
+- **Vision AI (Image Upload):** Upload screenshots and ask questions about them. ExplainX's AI models analyze images directly in the chat.
+- **Interactive Chat Sidebar:** Don't just read an explanation—chat with the AI to ask follow-up questions until you fully understand.
+- **Draggable Interface:** The activation button is a draggable floating icon, keeping it out of your way until you need it. Conversation history saved locally
 - Dark mode by default
 
 ### 🖱️ Draggable Toggle
