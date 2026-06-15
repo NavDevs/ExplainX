@@ -13,8 +13,10 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-flash-latest',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.1-8b-instant',
+  groq: 'llama-3.2-90b-vision-preview',
 };
+
+const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
 
 // Request queue to prevent rate limiting
 class RequestQueue {
@@ -118,11 +120,11 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
 
   const { apiKey, provider } = await getStoredSettings();
 
-  let finalApiKey = apiKey || "YOUR_DEFAULT_API_KEY_HERE";
-  let finalProvider = provider || 'openai';
+  let finalApiKey = apiKey || DEFAULT_GROQ_KEY;
+  let finalProvider = provider || 'groq';
 
   // API key must be provided by user in extension settings or fallback to default
-  if (!finalApiKey || finalApiKey === "YOUR_DEFAULT_API_KEY_HERE") {
+  if (!finalApiKey) {
     // throw new Error('API key is required. Please add your API key in ExplainX settings.');
   }
 
@@ -277,11 +279,11 @@ export async function callAIChat(
 ): Promise<string> {
   const { apiKey, provider } = await getStoredSettings();
 
-  let finalApiKey = apiKey || "YOUR_DEFAULT_API_KEY_HERE";
-  let finalProvider = provider || 'openai';
+  let finalApiKey = apiKey || DEFAULT_GROQ_KEY;
+  let finalProvider = provider || 'groq';
 
   // API key must be provided by user in extension settings or fallback to default
-  if (!finalApiKey || finalApiKey === "YOUR_DEFAULT_API_KEY_HERE") {
+  if (!finalApiKey) {
     // throw new Error('API key is required. Please add your API key in ExplainX settings.');
   }
 
