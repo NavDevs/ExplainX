@@ -223,7 +223,7 @@
 #explainx-body h3, .chat-message.assistant h3 { font-size: 15px; }
 
 p { margin-bottom: 10px; }
-ul, ol { margin-bottom: 10px; padding-left: 20px; }
+ul, ol { margin-bottom: 10px; padding-left: 32px; list-style-position: outside; }
 li { margin-bottom: 6px; }
 
 strong {
