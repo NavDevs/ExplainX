@@ -226,6 +226,24 @@
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
 }
 
+/* Typography */
+.ai-chat-message p {
+  margin-bottom: 10px;
+}
+.ai-chat-message p:last-child {
+  margin-bottom: 0;
+}
+.ai-chat-message ul,
+.ai-chat-message ol {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  padding-left: 32px;
+  list-style-position: outside;
+}
+.ai-chat-message li {
+  margin-bottom: 6px;
+}
+
 /* Typing Indicator */
 .typing-indicator {
   display: flex;
