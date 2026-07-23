@@ -13,7 +13,7 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-flash-latest',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.2-11b-vision-preview',
+  groq: 'llama-3.1-8b-instant',
 };
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
@@ -89,7 +89,12 @@ async function fetchWithRetry(
         if (res.status === 401 || res.status === 403) {
           throw new Error('Invalid API key. Please check your ExplainX Settings.');
         }
-        throw new Error(`API Error: ${res.status} ${res.statusText}`);
+        let errorMsg = res.statusText;
+        try {
+          const errBody = await res.json();
+          if (errBody.error && errBody.error.message) errorMsg = errBody.error.message;
+        } catch (e) {}
+        throw new Error(`API Error: ${res.status} ${errorMsg}`);
       }
       
       return res;
@@ -357,7 +362,14 @@ async function callGroqChat(
   signal: AbortSignal,
   maxTokens: number
 ): Promise<string> {
-  const cleanMessages = messages.map(m => ({ role: m.role, content: m.content }));
+  const cleanMessages = messages.map(m => {
+    let textContent = m.content;
+    if (Array.isArray(m.content)) {
+      const textPart = m.content.find(p => p.type === 'text');
+      textContent = textPart ? textPart.text : '[Image omitted - Groq vision models are currently offline]';
+    }
+    return { role: m.role, content: textContent };
+  });
 
   const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
     method: 'POST',
