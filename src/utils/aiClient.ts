@@ -13,7 +13,7 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-flash-latest',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama3-8b-8192',
+  groq: 'llama-3.2-11b-vision-preview',
 };
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
@@ -357,6 +357,8 @@ async function callGroqChat(
   signal: AbortSignal,
   maxTokens: number
 ): Promise<string> {
+  const cleanMessages = messages.map(m => ({ role: m.role, content: m.content }));
+
   const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
     method: 'POST',
     signal,
@@ -366,7 +368,7 @@ async function callGroqChat(
     },
     body: JSON.stringify({
       model: MODELS['groq'],
-      messages,
+      messages: cleanMessages,
       max_tokens: maxTokens,
       temperature: 0.7,
     }),
