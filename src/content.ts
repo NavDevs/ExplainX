@@ -78,7 +78,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       selectedText: currentSelectedText
     };
     
-    appendChatMessage(assistantMsg);
+    appendChatMessage(assistantMsg, true, true);
     return false;
   }
 
@@ -271,16 +271,18 @@ async function showChatSidebar() {
   scrollToBottom();
 }
 
-function renderChatMessage(msg: ChatMessage): string {
+function renderChatMessage(msg: ChatMessage, animate: boolean = false): string {
+  const dynamicPadding = Math.min(Math.max(16 + (msg.content.length * 0.05), 16), 64);
+  
   if (msg.role === 'user') {
     const imageHtml = msg.imageUrl ? `<img class="chat-image" src="${msg.imageUrl}" alt="Uploaded image" />` : '';
-    return `<div class="chat-message user"><div class="message-content">${imageHtml}${escapeHtml(msg.content)}</div></div>`;
+    return `<div class="chat-message user"><div class="message-content" style="padding: ${dynamicPadding}px">${imageHtml}${escapeHtml(msg.content)}</div></div>`;
   } else {
-    const rawHtml = marked.parse(msg.content) as string;
+    const rawHtml = animate ? '' : (marked.parse(msg.content) as string);
     const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(msg.content)}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
     </button>`;
-    return `<div class="chat-message assistant"><div class="message-content">${rawHtml}</div><div class="message-actions">${copyBtn}</div></div>`;
+    return `<div class="chat-message assistant"><div class="message-content" style="padding: ${dynamicPadding}px">${rawHtml}</div><div class="message-actions">${copyBtn}</div></div>`;
   }
 }
 
@@ -646,7 +648,7 @@ async function sendChatMessage() {
   });
 }
 
-function appendChatMessage(msg: ChatMessage, save: boolean = true) {
+function appendChatMessage(msg: ChatMessage, save: boolean = true, animate: boolean = false) {
   chatMessages.push(msg);
   
   if (save) {
@@ -656,10 +658,37 @@ function appendChatMessage(msg: ChatMessage, save: boolean = true) {
   const chatBody = document.getElementById('chat-body');
   if (chatBody) {
     const msgDiv = document.createElement('div');
-    msgDiv.innerHTML = renderChatMessage(msg);
-    chatBody.appendChild(msgDiv.firstElementChild!);
-    enhanceCodeBlocks();
-    scrollToBottom();
+    msgDiv.innerHTML = renderChatMessage(msg, animate);
+    const newElement = msgDiv.firstElementChild as HTMLElement;
+    chatBody.appendChild(newElement);
+    
+    if (animate && msg.role === 'assistant') {
+      const contentDiv = newElement.querySelector('.message-content') as HTMLElement;
+      if (contentDiv) {
+        let i = 0;
+        const fullText = msg.content;
+        const speed = Math.max(3, Math.floor(fullText.length / 100));
+        
+        const interval = setInterval(() => {
+          i += speed;
+          if (i >= fullText.length) {
+            i = fullText.length;
+            clearInterval(interval);
+            contentDiv.innerHTML = marked.parse(fullText) as string;
+            enhanceCodeBlocks();
+            scrollToBottom(true);
+            return;
+          }
+          
+          const currentText = fullText.slice(0, i);
+          contentDiv.innerHTML = marked.parse(currentText) as string;
+          scrollToBottom(true);
+        }, 15);
+      }
+    } else {
+      enhanceCodeBlocks();
+      scrollToBottom();
+    }
   }
 }
 
@@ -698,15 +727,19 @@ function showErrorInChat(error: string) {
   }, 5000);
 }
 
-function scrollToBottom() {
+function scrollToBottom(instant: boolean = false) {
   const chatBody = document.getElementById('chat-body');
   if (chatBody) {
-    setTimeout(() => {
-      chatBody.scrollTo({
-        top: chatBody.scrollHeight,
-        behavior: 'smooth'
-      });
-    }, 50);
+    if (instant) {
+      chatBody.scrollTop = chatBody.scrollHeight;
+    } else {
+      setTimeout(() => {
+        chatBody.scrollTo({
+          top: chatBody.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 50);
+    }
   }
 }
 
