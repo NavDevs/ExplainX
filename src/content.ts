@@ -272,17 +272,15 @@ async function showChatSidebar() {
 }
 
 function renderChatMessage(msg: ChatMessage, animate: boolean = false): string {
-  const dynamicPadding = Math.min(Math.max(16 + (msg.content.length * 0.05), 16), 64);
-  
   if (msg.role === 'user') {
     const imageHtml = msg.imageUrl ? `<img class="chat-image" src="${msg.imageUrl}" alt="Uploaded image" />` : '';
-    return `<div class="chat-message user"><div class="message-content" style="padding: ${dynamicPadding}px">${imageHtml}${escapeHtml(msg.content)}</div></div>`;
+    return `<div class="chat-message user"><div class="message-content">${imageHtml}${escapeHtml(msg.content)}</div></div>`;
   } else {
     const rawHtml = animate ? '' : (marked.parse(msg.content) as string);
     const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(msg.content)}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
     </button>`;
-    return `<div class="chat-message assistant"><div class="message-content" style="padding: ${dynamicPadding}px">${rawHtml}</div><div class="message-actions">${copyBtn}</div></div>`;
+    return `<div class="chat-message assistant"><div class="message-content">${rawHtml}</div><div class="message-actions">${copyBtn}</div></div>`;
   }
 }
 
