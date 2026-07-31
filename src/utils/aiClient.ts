@@ -351,14 +351,42 @@ async function callGroqChat(
   signal: AbortSignal,
   maxTokens: number
 ): Promise<string> {
-  const cleanMessages = messages.map(m => {
+  const cleanMessages = await Promise.all(messages.map(async m => {
     let textContent = m.content;
     if (Array.isArray(m.content)) {
       const textPart = m.content.find(p => p.type === 'text');
-      textContent = (textPart ? textPart.text : '') + '\n\n[SYSTEM NOTICE TO AI: The user just uploaded an image, but you are currently running on the Groq network which decommissioned its Vision models. You physically cannot see the image. Politely inform the user that Groq does not support image analysis, and if they want to analyze images, they need to switch their AI Provider to Google Gemini in the ExplainX extension settings.]';
+      const imagePart = m.content.find(p => p.type === 'image_url');
+      
+      let ocrText = '';
+      if (imagePart && imagePart.image_url && imagePart.image_url.url) {
+        try {
+          const formData = new FormData();
+          formData.append('base64image', imagePart.image_url.url);
+          formData.append('apikey', 'helloworld');
+          
+          const ocrRes = await fetch('https://api.ocr.space/parse/image', {
+            method: 'POST',
+            body: formData
+          });
+          const ocrData = await ocrRes.json();
+          
+          if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
+            ocrText = ocrData.ParsedResults[0].ParsedText || '';
+          }
+        } catch (e) {
+          console.error('OCR Error:', e);
+        }
+      }
+      
+      textContent = (textPart ? textPart.text : '');
+      if (ocrText && ocrText.trim().length > 0) {
+        textContent += `\n\n[SYSTEM NOTICE TO AI: The user uploaded an image. Because you are running on Groq (which lacks vision), an OCR engine has extracted the following text from the image for you to analyze. Treat this text as the contents of the image:\n"""\n${ocrText.trim()}\n"""]`;
+      } else {
+        textContent += '\n\n[SYSTEM NOTICE TO AI: The user uploaded an image, but you are currently running on the Groq network which lacks Vision models, and the OCR fallback could not extract any text. Politely inform the user that you cannot see the image, and if they need full visual analysis, they should switch to Google Gemini in the settings.]';
+      }
     }
     return { role: m.role, content: textContent };
-  });
+  }));
 
   const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
     method: 'POST',
