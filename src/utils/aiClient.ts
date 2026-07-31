@@ -123,13 +123,17 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
     text = words.slice(0, 1200).join(' ') + '\n\n[...selection truncated to 1200 words]';
   }
 
-  // Force hardcoded key and provider as requested
-  let finalApiKey = DEFAULT_GROQ_KEY;
-  let finalProvider = 'groq';
+  // Fetch actual user settings
+  const settings = await getStoredSettings();
+  let finalApiKey = settings.apiKey;
+  let finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings or fallback to default
-  if (!finalApiKey) {
-    // throw new Error('API key is required. Please add your API key in ExplainX settings.');
+  // Fallback to free Groq tier if no API key is set for premium providers
+  if (!finalApiKey && finalProvider !== 'groq') {
+    finalApiKey = DEFAULT_GROQ_KEY;
+    finalProvider = 'groq';
+  } else if (!finalApiKey && finalProvider === 'groq') {
+    finalApiKey = DEFAULT_GROQ_KEY;
   }
 
   const prompt = buildPrompt(text, mode);
@@ -281,13 +285,17 @@ export async function callAIChat(
   maxTokens: number = 1000,
   _ignoredImageUrl?: string
 ): Promise<string> {
-  // Force hardcoded key and provider as requested
-  let finalApiKey = DEFAULT_GROQ_KEY;
-  let finalProvider = 'groq';
+  // Fetch actual user settings
+  const settings = await getStoredSettings();
+  let finalApiKey = settings.apiKey;
+  let finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings or fallback to default
-  if (!finalApiKey) {
-    // throw new Error('API key is required. Please add your API key in ExplainX settings.');
+  // Fallback to free Groq tier if no API key is set for premium providers
+  if (!finalApiKey && finalProvider !== 'groq') {
+    finalApiKey = DEFAULT_GROQ_KEY;
+    finalProvider = 'groq';
+  } else if (!finalApiKey && finalProvider === 'groq') {
+    finalApiKey = DEFAULT_GROQ_KEY;
   }
 
   const controller = new AbortController();

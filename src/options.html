@@ -51,9 +51,12 @@
               <option value="openai">OpenAI ChatGPT (Premium Required)</option>
             </select>
           </div>
-          <div class="info-alert">
-            <span class="icon">✨</span>
-            <p>Your API key is managed automatically. No custom setup required.</p>
+          </div>
+          
+          <div class="settings-group" style="margin-top: 16px;">
+            <label for="apiKey">API Key</label>
+            <input type="password" id="apiKey" class="form-input" placeholder="Paste your API key here..." style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); margin-top: 8px;">
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Get a free Gemini API key at <a href="https://aistudio.google.com/" target="_blank" style="color: #667eea;">aistudio.google.com</a></p>
           </div>
         </section>
 
