@@ -125,16 +125,8 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
 
   // Fetch actual user settings
   const settings = await getStoredSettings();
-  let finalApiKey = settings.apiKey;
-  let finalProvider = settings.provider;
-
-  // Fallback to free Groq tier if no API key is set for premium providers
-  if (!finalApiKey && finalProvider !== 'groq') {
-    finalApiKey = DEFAULT_GROQ_KEY;
-    finalProvider = 'groq';
-  } else if (!finalApiKey && finalProvider === 'groq') {
-    finalApiKey = DEFAULT_GROQ_KEY;
-  }
+  let finalApiKey = DEFAULT_GROQ_KEY;
+  let finalProvider = 'groq';
 
   const prompt = buildPrompt(text, mode);
   const controller = new AbortController();
@@ -287,16 +279,8 @@ export async function callAIChat(
 ): Promise<string> {
   // Fetch actual user settings
   const settings = await getStoredSettings();
-  let finalApiKey = settings.apiKey;
-  let finalProvider = settings.provider;
-
-  // Fallback to free Groq tier if no API key is set for premium providers
-  if (!finalApiKey && finalProvider !== 'groq') {
-    finalApiKey = DEFAULT_GROQ_KEY;
-    finalProvider = 'groq';
-  } else if (!finalApiKey && finalProvider === 'groq') {
-    finalApiKey = DEFAULT_GROQ_KEY;
-  }
+  let finalApiKey = DEFAULT_GROQ_KEY;
+  let finalProvider = 'groq';
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for chat
@@ -371,7 +355,7 @@ async function callGroqChat(
     let textContent = m.content;
     if (Array.isArray(m.content)) {
       const textPart = m.content.find(p => p.type === 'text');
-      textContent = textPart ? textPart.text : '[Image omitted - Groq vision models are currently offline]';
+      textContent = (textPart ? textPart.text : '') + '\n\n[SYSTEM NOTICE TO AI: The user just uploaded an image, but you are currently running on the Groq network which decommissioned its Vision models. You physically cannot see the image. Politely inform the user that Groq does not support image analysis, and if they want to analyze images, they need to switch their AI Provider to Google Gemini in the ExplainX extension settings.]';
     }
     return { role: m.role, content: textContent };
   });
