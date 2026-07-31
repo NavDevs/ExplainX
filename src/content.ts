@@ -636,7 +636,7 @@ async function sendChatMessage() {
   
   const conversationHistory = chatMessages
     .slice(-20)
-    .map(m => ({ role: m.role, content: m.content, selectedText: m.selectedText }));
+    .map(m => ({ role: m.role, content: m.content, selectedText: m.selectedText, imageUrl: m.imageUrl }));
   
   chrome.runtime.sendMessage({
     type: 'CHAT_MESSAGE',

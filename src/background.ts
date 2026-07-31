@@ -122,8 +122,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     const aiMessages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.map((msg: any) => ({ role: msg.role, content: msg.content })),
-      { role: 'user', content: message }
+      ...conversationHistory.map((msg: any) => ({ role: msg.role, content: msg.content, imageUrl: msg.imageUrl }))
     ];
     
     callAIChat(aiMessages, 1000, imageUrl)

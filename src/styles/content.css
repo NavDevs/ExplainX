@@ -224,6 +224,13 @@
 
 p { margin-bottom: 10px; }
 ul, ol { margin-bottom: 10px; padding-left: 32px; list-style-position: outside; }
+
+/* Force scoped padding for lists in the chat to prevent website CSS from overriding it */
+#explainx-chat-container .chat-message ul,
+#explainx-chat-container .chat-message ol {
+  padding-left: 32px !important;
+  list-style-position: outside !important;
+}
 li { margin-bottom: 6px; }
 
 strong {

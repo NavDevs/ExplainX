@@ -277,9 +277,9 @@ async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal
 
 // Chat-specific AI call with conversation history
 export async function callAIChat(
-  messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[]}>,
+  messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[], imageUrl?: string}>,
   maxTokens: number = 1000,
-  imageUrl?: string
+  _ignoredImageUrl?: string
 ): Promise<string> {
   // Force hardcoded key and provider as requested
   let finalApiKey = DEFAULT_GROQ_KEY;
@@ -293,31 +293,28 @@ export async function callAIChat(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for chat
 
-  // If imageUrl is provided, modify the last user message to include the image
-  if (imageUrl) {
-    const lastUserIdx = messages.map(m => m.role).lastIndexOf('user');
-    if (lastUserIdx !== -1) {
-      const userMsg = messages[lastUserIdx];
-      const textContent = typeof userMsg.content === 'string' ? userMsg.content : '';
-      // Format depends on provider, but we prepare a generic structure here
-      // Individual provider functions will handle their own format
-      messages[lastUserIdx] = {
-        ...userMsg,
-        content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: imageUrl } }]
+  // Process all messages to format images correctly for multimodal APIs
+  const processedMessages = messages.map(msg => {
+    if (msg.role === 'user' && msg.imageUrl) {
+      const textContent = typeof msg.content === 'string' ? msg.content : '';
+      return {
+        ...msg,
+        content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: msg.imageUrl } }]
       };
     }
-  }
+    return msg;
+  });
 
   try {
     return await requestQueue.add(async () => {
       if (finalProvider === 'anthropic') {
-        return await callAnthropicChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callAnthropicChat(processedMessages, finalApiKey, controller.signal, maxTokens);
       } else if (finalProvider === 'gemini') {
-        return await callGeminiChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callGeminiChat(processedMessages, finalApiKey, controller.signal, maxTokens);
       } else if (finalProvider === 'groq') {
-        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callGroqChat(processedMessages, finalApiKey, controller.signal, maxTokens);
       } else {
-        return await callOpenAIChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callOpenAIChat(processedMessages, finalApiKey, controller.signal, maxTokens);
       }
     });
   } catch (err: any) {
