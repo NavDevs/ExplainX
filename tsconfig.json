@@ -12,10 +12,10 @@
     "types": ["chrome"],
     "jsx": "react",
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/components/ui/**/*"]
+  "include": ["src/**/*"]
 }
