@@ -15,7 +15,8 @@ import {
   Copy, 
   Check, 
   Sparkles,
-  Bot
+  Bot,
+  ArrowDown
 } from "lucide-react";
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
@@ -47,10 +48,13 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isAutoScrollEnabled = useRef<boolean>(true);
 
   // Auto-resize textarea when input changes
   useEffect(() => {
@@ -125,10 +129,28 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     return () => chrome.runtime.onMessage.removeListener(listener);
   }, []);
 
-  // Auto-scroll on new messages or stream updates
+  // Smart Auto-scroll: Only scrolls if the user hasn't scrolled up to read history
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isAutoScrollEnabled.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, streamText]);
+
+  // Track User Scroll Position to allow free scrolling up during generation
+  const handleScroll = () => {
+    if (!chatScrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatScrollRef.current;
+    // If within 70px of the bottom, keep auto-scroll on; if user scrolled up, disable auto-scroll
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 70;
+    isAutoScrollEnabled.current = isNearBottom;
+    setShowScrollDownBtn(!isNearBottom);
+  };
+
+  const scrollToBottom = () => {
+    isAutoScrollEnabled.current = true;
+    setShowScrollDownBtn(false);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Handle Image File Selection
   const handleImageFile = (file: File) => {
@@ -179,6 +201,10 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     setPendingImage(null);
     setIsTyping(true);
     setKeyError(null);
+
+    // Re-enable auto-scroll when sending
+    isAutoScrollEnabled.current = true;
+    setShowScrollDownBtn(false);
 
     // Reset textarea height
     if (textareaRef.current) {
@@ -238,14 +264,14 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     const conversationText = messages
       .map((m) => {
         const time = new Date(m.timestamp).toLocaleTimeString();
-        const role = m.role === 'user' ? 'You' : 'ExplainX AI';
+        const role = m.role === "user" ? "You" : "ExplainX AI";
         return `[${time}] ${role}:\n${m.content}\n`;
       })
-      .join('\n----------------------------------------\n\n');
+      .join("\n----------------------------------------\n\n");
 
-    const blob = new Blob([conversationText], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([conversationText], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `explainx-chat-${new Date().toISOString().slice(0, 10)}.md`;
     a.click();
@@ -282,7 +308,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               </span>
             </div>
             <span className="text-[10px] text-white/50 font-mono">
-              {provider === "groq" ? "Groq (Fast)" : "Gemini (Vision)"}
+              {provider === "groq" ? "Groq (Ultra-Fast)" : "Gemini (Vision)"}
             </span>
           </div>
         </div>
@@ -434,7 +460,11 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       </AnimatePresence>
 
       {/* Messages Scrolling Area */}
-      <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-4 text-sm flex flex-col relative z-10">
+      <div 
+        ref={chatScrollRef}
+        onScroll={handleScroll}
+        className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-4 text-sm flex flex-col relative z-10 scroll-smooth"
+      >
         {messages.length === 0 && !setupMode && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -509,7 +539,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
                   {copiedId === msg.id ? (
                     <>
                       <Check className="w-3 h-3 text-green-400" />
-                      <span className="text-green-400">Copied!</span>
+                      <span className="text-green-400 font-medium">Copied!</span>
                     </>
                   ) : (
                     <>
@@ -533,17 +563,19 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
           </motion.div>
         ))}
 
-        {/* Live Streaming Response Preview */}
+        {/* Live Streaming Response with Typewriter Glow Cursor */}
         {isTyping && streamText && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-[88%] rounded-2xl px-4 py-3 bg-zinc-900/90 border border-white/10 text-zinc-100 self-start text-xs leading-relaxed shadow-md"
+            className="max-w-[88%] rounded-2xl px-4 py-3 bg-zinc-900/90 border border-white/10 text-zinc-100 self-start text-xs leading-relaxed shadow-md relative"
           >
             <div 
-              className="explainx-markdown" 
+              className="explainx-markdown inline" 
               dangerouslySetInnerHTML={renderMarkdown(streamText)} 
             />
+            {/* Blinking Typewriter Cursor */}
+            <span className="inline-block w-1.5 h-3.5 ml-1 bg-blue-400 rounded-sm animate-pulse align-middle shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
           </motion.div>
         )}
 
@@ -562,6 +594,23 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Floating Jump to Bottom Button (Visible when user scrolls up) */}
+      <AnimatePresence>
+        {showScrollDownBtn && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={scrollToBottom}
+            className="absolute bottom-16 right-5 z-30 p-2 rounded-full bg-blue-600/90 hover:bg-blue-500 text-white shadow-lg shadow-black/60 backdrop-blur-md border border-white/20 transition-all flex items-center gap-1 text-[11px] font-medium"
+            title="Scroll to bottom"
+          >
+            <ArrowDown className="w-3.5 h-3.5" />
+            <span>Latest</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Image Preview Banner */}
       {pendingImage && (
