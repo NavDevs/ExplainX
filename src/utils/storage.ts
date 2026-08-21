@@ -1,6 +1,6 @@
 // Types
 export type Mode = 'simple' | 'student' | 'beginner-code' | 'interview' | 'summary';
-export type Provider = 'openai' | 'gemini' | 'anthropic' | 'groq';
+export type Provider = 'openai' | 'gemini' | 'anthropic' | 'groq' | 'pollinations';
 
 export interface ChatMessage {
   id: string;

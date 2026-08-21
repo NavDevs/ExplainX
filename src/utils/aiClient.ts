@@ -128,8 +128,8 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
   const finalApiKey = settings.apiKey;
   const finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings
-  if (!finalApiKey || finalApiKey.trim().length === 0) {
+  // API key must be provided by user in extension settings (unless pollinations)
+  if (finalProvider !== 'pollinations' && (!finalApiKey || finalApiKey.trim().length === 0)) {
     throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
   }
 
@@ -140,7 +140,9 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
   try {
      // Use request queue to prevent rate limiting
      return await requestQueue.add(async () => {
-       if (finalProvider === 'anthropic') {
+       if (finalProvider === 'pollinations') {
+         return await callPollinations(prompt, controller.signal);
+       } else if (finalProvider === 'anthropic') {
          return await callAnthropic(prompt, finalApiKey, controller.signal);
        } else if (finalProvider === 'gemini') {
          return await callGemini(prompt, finalApiKey, controller.signal);
@@ -225,6 +227,24 @@ async function callGemini(prompt: string, apiKey: string, signal: AbortSignal): 
   return content.parts[0].text;
 }
 
+async function callPollinations(prompt: string, signal: AbortSignal): Promise<string> {
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'openai',
+      jsonMode: false
+    })
+  });
+  const data = await res.json();
+  if (!data.choices || data.choices.length === 0) {
+    throw new Error('Pollinations AI returned an empty response.');
+  }
+  return data.choices[0].message.content;
+}
+
 async function callGroq(prompt: string, apiKey: string, signal: AbortSignal): Promise<string> {
   const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
     method: 'POST',
@@ -276,47 +296,54 @@ async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal
   return data.content[0].text;
 }
 
-// Chat-specific AI call with conversation history
+// -----------------------------------------------------------------------------
+// CHAT FUNCTIONALITY
+// -----------------------------------------------------------------------------
+
 export async function callAIChat(
-  messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[], imageUrl?: string}>,
+  messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[]}>,
   maxTokens: number = 1000,
-  _ignoredImageUrl?: string
+  imageUrl?: string
 ): Promise<string> {
-  // Fetch actual user settings
   const settings = await getStoredSettings();
   const finalApiKey = settings.apiKey;
   const finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings
-  if (!finalApiKey || finalApiKey.trim().length === 0) {
+  // API key must be provided by user in extension settings (unless pollinations)
+  if (finalProvider !== 'pollinations' && (!finalApiKey || finalApiKey.trim().length === 0)) {
     throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for chat
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-  // Process all messages to format images correctly for multimodal APIs
-  const processedMessages = messages.map(msg => {
-    if (msg.role === 'user' && msg.imageUrl) {
-      const textContent = typeof msg.content === 'string' ? msg.content : '';
-      return {
-        ...msg,
-        content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: msg.imageUrl } }]
+  // If imageUrl is provided, modify the last user message to include the image
+  if (imageUrl) {
+    const lastUserIdx = messages.map(m => m.role).lastIndexOf('user');
+    if (lastUserIdx !== -1) {
+      const userMsg = messages[lastUserIdx];
+      const textContent = typeof userMsg.content === 'string' ? userMsg.content : '';
+      // Format depends on provider, but we prepare a generic structure here
+      // Individual provider functions will handle their own format
+      messages[lastUserIdx] = {
+        ...userMsg,
+        content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: imageUrl } }]
       };
     }
-    return msg;
-  });
+  }
 
   try {
     return await requestQueue.add(async () => {
-      if (finalProvider === 'anthropic') {
-        return await callAnthropicChat(processedMessages, finalApiKey, controller.signal, maxTokens);
+      if (finalProvider === 'pollinations') {
+        return await callPollinationsChat(messages, controller.signal, maxTokens);
+      } else if (finalProvider === 'anthropic') {
+        return await callAnthropicChat(messages, finalApiKey, controller.signal, maxTokens);
       } else if (finalProvider === 'gemini') {
-        return await callGeminiChat(processedMessages, finalApiKey, controller.signal, maxTokens);
+        return await callGeminiChat(messages, finalApiKey, controller.signal, maxTokens);
       } else if (finalProvider === 'groq') {
-        return await callGroqChat(processedMessages, finalApiKey, controller.signal, maxTokens);
+        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens);
       } else {
-        return await callOpenAIChat(processedMessages, finalApiKey, controller.signal, maxTokens);
+        return await callOpenAIChat(messages, finalApiKey, controller.signal, maxTokens);
       }
     });
   } catch (err: any) {
@@ -330,6 +357,62 @@ export async function callAIChat(
 }
 
 // OpenAI-compatible chat endpoint (works for OpenAI, Groq)
+async function callPollinationsChat(
+  messages: Array<{role: string, content: string | any[]}>,
+  signal: AbortSignal,
+  maxTokens: number
+): Promise<string> {
+  const cleanMessages = await Promise.all(messages.map(async m => {
+    let textContent = m.content as string;
+    if (Array.isArray(m.content)) {
+      const textPart = m.content.find((p: any) => p.type === 'text');
+      const imgPart = m.content.find((p: any) => p.type === 'image_url');
+      let ocrText = '';
+      if (imgPart && imgPart.image_url && imgPart.image_url.url) {
+        try {
+          const formData = new FormData();
+          formData.append('base64image', imgPart.image_url.url);
+          formData.append('apikey', 'helloworld'); 
+          const ocrRes = await fetch('https://api.ocr.space/parse/image', {
+            method: 'POST',
+            body: formData
+          });
+          const ocrData = await ocrRes.json();
+          if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
+            ocrText = ocrData.ParsedResults[0].ParsedText || '';
+          }
+        } catch (e) {
+          console.error('OCR Error:', e);
+        }
+      }
+      textContent = (textPart ? textPart.text : '');
+      if (ocrText && ocrText.trim().length > 0) {
+        textContent += `\n\n[SYSTEM NOTICE TO AI: The user uploaded an image. Because you are running on Pollinations (which lacks vision), an OCR engine has extracted the following text from the image for you to analyze. Treat this text as the contents of the image:\n"""\n${ocrText.trim()}\n"""]`;
+      } else {
+        textContent += '\n\n[SYSTEM NOTICE TO AI: The user uploaded an image, but you are currently running on Pollinations which lacks Vision models, and the OCR fallback could not extract any text. Politely inform the user that you cannot see the image, and if they need full visual analysis, they should switch to Google Gemini in the settings.]';
+      }
+    }
+    return { role: m.role, content: textContent };
+  }));
+
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: cleanMessages,
+      model: 'openai',
+      jsonMode: false
+    })
+  });
+
+  const data = await res.json();
+  if (!data.choices || data.choices.length === 0) {
+    throw new Error('Pollinations AI returned an empty response.');
+  }
+  return data.choices[0].message.content;
+}
+
 async function callOpenAIChat(
   messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
