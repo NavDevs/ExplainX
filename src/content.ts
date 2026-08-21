@@ -284,75 +284,16 @@ async function showChatSidebar() {
 
   const overlay = getOrCreateOverlay();
   const toggleBtn = getOrCreateToggle();
-  
-  if (isDarkMode) {
-    overlay.classList.add('dark-mode');
-  } else {
-    overlay.classList.remove('dark-mode');
-  }
 
   toggleBtn.classList.add('hidden');
-  
-  chatMessages = await getChatMessages();
 
-  let missingKeyHtml = '';
-  if (!settings.apiKey || settings.apiKey.trim().length === 0) {
-    missingKeyHtml = `
-      <div class="explainx-setup-container" style="padding: 20px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); margin: 15px;">
-        <h3 style="margin-top:0; color: var(--text-primary); font-size: 16px;">👋 Welcome to ExplainX</h3>
-        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px;">To get started, please select your AI provider.</p>
-        
-        <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">Provider:</label>
-        <select id="inline-provider-select" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; background: var(--bg-primary); color: var(--text-primary);">
-          <option value="groq" ${settings.provider === 'groq' ? 'selected' : ''}>Groq (Requires API Key)</option>
-          <option value="gemini" ${settings.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Requires API Key)</option>
-        </select>
-
-        <div id="inline-apikey-container">
-          <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">API Key:</label>
-          <input type="password" id="inline-apikey-input" placeholder="Paste your API key here..." style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" />
-        </div>
-        
-        <button id="inline-apikey-save" style="width:100%; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;">Connect & Start Chatting</button>
-      </div>
-    `;
-  }
-
-  pendingImageUrl = null;
-  overlay.innerHTML = `<div id="explainx-react-root" style="width: 100%; height: 100%;"></div>`;
-    
-    // We import dynamically to avoid React running in the global context before it's needed
-    mountChatbotSync(document.getElementById('explainx-react-root')!);
-    
-    // Grab the injection zones provided by our React Shell
-    const chatZone = document.getElementById('react-chat-injection-zone');
-    const inputZone = document.getElementById('react-input-injection-zone');
-    
-    if (chatZone && inputZone) {
-      chatZone.innerHTML = `
-        ${missingKeyHtml}
-        ${chatMessages.map(msg => renderChatMessage(msg)).join('')}
-      `;
-      chatZone.id = 'chat-body'; // Rename so Vanilla JS finds it
-      
-      inputZone.innerHTML = `
-        <div id="image-preview-container" class="explainx-image-preview" style="display:none;"></div>
-        <div class="explainx-chat-input z-50 flex gap-2 w-full">
-          <input type="file" id="image-file-input" accept="image/*" style="display:none;" />
-          <button id="image-upload-btn" class="explainx-image-btn z-50" title="Upload image">dY"</button>
-          <textarea id="chat-input" placeholder="Ask anything..." rows="1" aria-label="Chat input" class="flex-1 z-50 text-black p-2 rounded"></textarea>
-          <button id="chat-send-btn" class="z-50 bg-blue-600 text-white px-4 rounded">Send</button>
-        </div>
-      `;
-    }
+  // Mount React — it handles everything (messages, input, settings, streaming)
+  overlay.innerHTML = '<div id="explainx-react-root" style="width: 100%; height: 100%;"></div>';
+  mountChatbotSync(document.getElementById('explainx-react-root')!, () => hideSidebar());
 
   // Force a browser reflow so the slide-in animation triggers correctly
   void overlay.offsetWidth;
   overlay.classList.add('active');
-
-  enhanceCodeBlocks();
-  attachChatEventListeners();
-  scrollToBottom();
 }
 
 function renderChatMessage(msg: ChatMessage, animate: boolean = false): string {
