@@ -288,7 +288,7 @@ async function showChatSidebar() {
   toggleBtn.classList.add('hidden');
 
   // Mount React — it handles everything (messages, input, settings, streaming)
-  overlay.innerHTML = '<div id="explainx-react-root" style="width: 100%; height: 100%;"></div>';
+  overlay.innerHTML = '<div id="explainx-react-root" style="width: 100%; height: 100%; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column;"></div>';
   mountChatbotSync(document.getElementById('explainx-react-root')!, () => hideSidebar());
 
   // Force a browser reflow so the slide-in animation triggers correctly

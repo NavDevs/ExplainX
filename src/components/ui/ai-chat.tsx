@@ -213,7 +213,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
         )}
 
         {/* Messages */}
-        <div className="flex-1 px-4 py-3 overflow-y-auto space-y-3 text-sm flex flex-col relative z-10">
+        <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-3 text-sm flex flex-col relative z-10">
           {messages.length === 0 && !setupMode && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
