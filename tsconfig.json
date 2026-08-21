@@ -9,7 +9,12 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "rootDir": "./src",
-    "types": ["chrome"]
+    "types": ["chrome"],
+    "jsx": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src/**/*"]
 }
