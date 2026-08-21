@@ -318,33 +318,33 @@ async function showChatSidebar() {
   }
 
   pendingImageUrl = null;
-
-  overlay.innerHTML = `
-    <div id="explainx-popup">
-      <div class="explainx-header">
-        <span class="explainx-logo">
-          <img src="${LOGO_BASE64}" alt="logo" class="explainx-chat-logo" /> 
-          ExplainX
-        </span>
-        <div class="header-actions">
-          <button class="header-btn" id="export-chat-btn" title="Export Conversation">Export</button>
-          <button class="header-btn" id="clear-chat-btn" title="Clear Chat">Clear</button>
-          <button class="explainx-close" id="explainx-close-btn" title="Close">✕</button>
-        </div>
-      </div>
-      <div class="explainx-chat-body" id="chat-body">
+  overlay.innerHTML = `<div id="explainx-react-root" style="width: 100%; height: 100%;"></div>`;
+    
+    // We import dynamically to avoid React running in the global context before it's needed
+    const { mountChatbotSync } = require('./renderChatbot');
+    mountChatbotSync(document.getElementById('explainx-react-root')!);
+    
+    // Grab the injection zones provided by our React Shell
+    const chatZone = document.getElementById('react-chat-injection-zone');
+    const inputZone = document.getElementById('react-input-injection-zone');
+    
+    if (chatZone && inputZone) {
+      chatZone.innerHTML = `
         ${missingKeyHtml}
         ${chatMessages.map(msg => renderChatMessage(msg)).join('')}
-      </div>
-      <div id="image-preview-container" class="explainx-image-preview" style="display:none;"></div>
-      <div class="explainx-chat-input">
-        <input type="file" id="image-file-input" accept="image/*" style="display:none;" />
-        <button id="image-upload-btn" class="explainx-image-btn" title="Upload image">📷</button>
-        <textarea id="chat-input" placeholder="Ask anything..." rows="1" aria-label="Chat input"></textarea>
-        <button id="chat-send-btn">Send</button>
-      </div>
-    </div>
-  `;
+      `;
+      chatZone.id = 'chat-body'; // Rename so Vanilla JS finds it
+      
+      inputZone.innerHTML = `
+        <div id="image-preview-container" class="explainx-image-preview" style="display:none;"></div>
+        <div class="explainx-chat-input z-50 flex gap-2 w-full">
+          <input type="file" id="image-file-input" accept="image/*" style="display:none;" />
+          <button id="image-upload-btn" class="explainx-image-btn z-50" title="Upload image">dY"</button>
+          <textarea id="chat-input" placeholder="Ask anything..." rows="1" aria-label="Chat input" class="flex-1 z-50 text-black p-2 rounded"></textarea>
+          <button id="chat-send-btn" class="z-50 bg-blue-600 text-white px-4 rounded">Send</button>
+        </div>
+      `;
+    }
 
   // Force a browser reflow so the slide-in animation triggers correctly
   void overlay.offsetWidth;

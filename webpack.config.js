@@ -1,4 +1,4 @@
-const path = require('path');
+﻿const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
@@ -11,14 +11,25 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          'postcss-loader',
+        ],
       },
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    }
   },
   output: {
     filename: '[name].js',
@@ -35,7 +46,6 @@ module.exports = {
         { from: 'src/styles/options.css', to: 'styles/options.css', noErrorOnMissing: true },
         { from: 'src/styles/content.css', to: 'styles/content.css', noErrorOnMissing: true },
         { from: 'src/styles/ai-chat.css', to: 'styles/ai-chat.css', noErrorOnMissing: true },
-        // Placeholder for icons if they are created later
         { from: 'src/icons', to: 'icons', noErrorOnMissing: true },
       ],
     }),
