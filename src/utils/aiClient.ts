@@ -11,7 +11,7 @@ const API_ENDPOINTS: Record<string, string> = {
 
 const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-2.0-flash',
   anthropic: 'claude-3-5-sonnet-20241022',
   groq: 'llama-3.3-70b-versatile',
 };
@@ -22,6 +22,14 @@ const GROQ_FALLBACK_MODELS = [
   'llama3-8b-8192',
   'gemma2-9b-it',
   'mixtral-8x7b-32768',
+];
+
+const GEMINI_FALLBACK_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-pro',
 ];
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
@@ -621,34 +629,55 @@ async function callGeminiChat(
     return { parts: [{ text: msg.content as string }] };
   });
 
-  let baseUrl = API_ENDPOINTS['gemini'];
-  baseUrl = baseUrl.replace(':generateContent', ':streamGenerateContent');
-  const url = `${baseUrl}?alt=sse&key=${encodeURIComponent(apiKey)}`;
-  
-  const res = await fetch(url, {
-    method: 'POST',
-    signal,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents,
-      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-    }),
-  });
+  let lastErrorDetail = '';
 
-  if (!res.ok) {
-    let errorDetail = '';
+  for (const modelName of GEMINI_FALLBACK_MODELS) {
     try {
-      const errData = await res.json();
-      errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
-    } catch (e) {
-      errorDetail = res.statusText || `HTTP ${res.status}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+        }),
+      });
+
+      if (res.ok) {
+        return await processGeminiStream(res, onUpdate);
+      }
+
+      let errorDetail = '';
+      try {
+        const errData = await res.json();
+        errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
+      } catch (e) {
+        errorDetail = res.statusText || `HTTP ${res.status}`;
+      }
+
+      lastErrorDetail = errorDetail;
+
+      if (res.status === 400 && (errorDetail.toLowerCase().includes('api_key_invalid') || errorDetail.toLowerCase().includes('api key')) || res.status === 403 || res.status === 401) {
+        throw new Error('Invalid API key for Google Gemini. Please check or re-enter your API key in settings.');
+      }
+
+      // If 503 (high demand), 429 (rate limit), or 404 (not found), try next fallback model
+      if (res.status === 503 || res.status === 429 || res.status === 404 || errorDetail.toLowerCase().includes('demand') || errorDetail.toLowerCase().includes('quota') || errorDetail.toLowerCase().includes('overloaded')) {
+        continue;
+      }
+
+      throw new Error(`Gemini API Error (${res.status}): ${errorDetail}`);
+    } catch (err: any) {
+      if (err.message.includes('Invalid API key')) throw err;
+      if (modelName === GEMINI_FALLBACK_MODELS[GEMINI_FALLBACK_MODELS.length - 1]) {
+        throw err;
+      }
     }
-    if (res.status === 400 && (errorDetail.toLowerCase().includes('api_key_invalid') || errorDetail.toLowerCase().includes('api key')) || res.status === 403 || res.status === 401) {
-      throw new Error('Invalid API key for Google Gemini. Please check or re-enter your API key in settings.');
-    }
-    throw new Error(`Gemini API Error (${res.status}): ${errorDetail}`);
   }
-  return await processGeminiStream(res, onUpdate);
+
+  throw new Error(`Gemini API Error: ${lastErrorDetail || 'Google Gemini is currently busy. Please try again in a moment.'}`);
 }
 
 // Anthropic chat endpoint
