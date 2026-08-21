@@ -21,27 +21,30 @@ import {
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
-// Custom code block renderer with dedicated Copy Code button
-const renderer = new marked.Renderer();
-renderer.code = function({ text, lang }: { text: string; lang?: string }) {
-  const language = lang || "code";
-  const encodedCode = encodeURIComponent(text);
-  const escapedText = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  
-  return `<div class="explainx-code-card my-2.5 rounded-xl overflow-hidden border border-white/15 bg-zinc-950/90 shadow-md">
-    <div class="flex items-center justify-between px-3 py-1.5 bg-white/5 border-b border-white/10 text-[11px] text-zinc-400 font-mono">
-      <span class="font-semibold text-zinc-300 uppercase tracking-wider text-[10px]">${language}</span>
-      <button type="button" class="explainx-copy-code-btn px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer select-none text-[10px]" data-code="${encodedCode}">
-        <span class="btn-text">Copy Code</span>
-      </button>
-    </div>
-    <pre class="p-3 overflow-x-auto text-[11px] font-mono leading-relaxed text-zinc-200 m-0"><code>${escapedText}</code></pre>
-  </div>`;
-};
-marked.use({ renderer });
+// Custom code block renderer with dedicated Copy Code header
+marked.use({
+  renderer: {
+    code(token: any) {
+      const text = (typeof token === "object" && token.text !== undefined ? token.text : token) || "";
+      const lang = ((typeof token === "object" && token.lang) || "code").toLowerCase();
+      const encodedCode = encodeURIComponent(text);
+      const escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      return `<div class="explainx-code-container my-3 rounded-xl overflow-hidden border border-white/20 bg-zinc-950 shadow-md">
+  <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-white/10 text-[11px] text-zinc-400 font-mono">
+    <span class="font-semibold text-blue-400 uppercase tracking-wider text-[10px]">${lang}</span>
+    <button type="button" class="explainx-copy-code-btn px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-200 hover:text-white transition-all flex items-center gap-1 cursor-pointer select-none text-[10px] font-sans" data-code="${encodedCode}">
+      <span class="btn-text">📋 Copy Code</span>
+    </button>
+  </div>
+  <pre class="p-3.5 overflow-x-auto text-[12px] font-mono leading-relaxed text-zinc-200 m-0 bg-black/80"><code>${escaped}</code></pre>
+</div>`;
+    }
+  }
+});
 
 interface ChatMsg {
   id: string;
@@ -316,10 +319,10 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       const textSpan = btn.querySelector(".btn-text");
       if (textSpan) {
         textSpan.textContent = "✓ Copied!";
-        btn.classList.add("text-green-400", "bg-green-500/20");
+        btn.classList.add("text-green-400", "bg-green-500/30", "border-green-500/50");
         setTimeout(() => {
-          textSpan.textContent = "Copy Code";
-          btn.classList.remove("text-green-400", "bg-green-500/20");
+          textSpan.textContent = "📋 Copy Code";
+          btn.classList.remove("text-green-400", "bg-green-500/30", "border-green-500/50");
         }, 2000);
       }
     }
