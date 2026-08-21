@@ -2,7 +2,22 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, Trash2, Settings, Image as ImageIcon, KeyRound, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { 
+  Send, 
+  X, 
+  Trash2, 
+  Settings, 
+  Image as ImageIcon, 
+  KeyRound, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Download, 
+  Copy, 
+  Check, 
+  Sparkles,
+  Bot
+} from "lucide-react";
+import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
 interface ChatMsg {
@@ -31,10 +46,20 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
   const [keyError, setKeyError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea when input changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+      textareaRef.current.style.height = `${Math.max(newHeight, 38)}px`;
+    }
+  }, [input]);
 
   // Load settings & saved messages on mount
   useEffect(() => {
@@ -155,6 +180,11 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     setIsTyping(true);
     setKeyError(null);
 
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "38px";
+    }
+
     const history = updated.slice(-20).map((m) => ({
       role: m.role,
       content: m.content,
@@ -167,6 +197,13 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       conversationHistory: history,
       imageUrl: sentImage || undefined,
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const handleSaveKey = () => {
@@ -189,338 +226,425 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
   };
 
   const handleClear = () => {
-    setMessages([]);
-    chrome.storage.local.set({ explainx_chat_messages: [] });
+    if (messages.length === 0) return;
+    if (window.confirm("Clear all messages in this conversation?")) {
+      setMessages([]);
+      chrome.storage.local.set({ explainx_chat_messages: [] });
+    }
+  };
+
+  const handleExport = () => {
+    if (messages.length === 0) return;
+    const conversationText = messages
+      .map((m) => {
+        const time = new Date(m.timestamp).toLocaleTimeString();
+        const role = m.role === 'user' ? 'You' : 'ExplainX AI';
+        return `[${time}] ${role}:\n${m.content}\n`;
+      })
+      .join('\n----------------------------------------\n\n');
+
+    const blob = new Blob([conversationText], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `explainx-chat-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyMessage = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const renderMarkdown = (content: string) => {
+    try {
+      return { __html: marked.parse(content) as string };
+    } catch {
+      return { __html: content };
+    }
   };
 
   return (
-    <div className={cn("relative w-full h-full rounded-2xl overflow-hidden p-[2px]", className)}>
-      {/* Animated Outer Border */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl border-2 border-white/20"
-        animate={{ rotate: [0, 360] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-      />
-
-      {/* Inner Glass Card */}
-      <div className="relative flex flex-col w-full h-full rounded-xl border border-white/10 overflow-hidden bg-black/90 backdrop-blur-xl">
-        {/* Inner Animated Gradient Background */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950 opacity-90"
-          animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          style={{ backgroundSize: "200% 200%" }}
-        />
-
-        {/* Floating Ambient Particles */}
-        {Array.from({ length: 15 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-white/15 pointer-events-none"
-            animate={{
-              y: ["0%", "-140%"],
-              x: [Math.random() * 160 - 80, Math.random() * 160 - 80],
-              opacity: [0, 0.8, 0],
-            }}
-            transition={{
-              duration: 6 + Math.random() * 4,
-              repeat: Infinity,
-              delay: i * 0.4,
-              ease: "easeInOut",
-            }}
-            style={{ left: `${Math.random() * 100}%`, bottom: "-10%" }}
-          />
-        ))}
-
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-white/10 relative z-10 flex items-center justify-between bg-black/40 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🤖</span>
-            <div>
-              <h2 className="text-sm font-semibold text-white leading-tight">ExplainX</h2>
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-mono">
-                {provider === "groq" ? "Groq (Ultra-Fast)" : "Gemini (Vision)"}
+    <div className={cn("relative w-full h-full flex flex-col bg-black overflow-hidden font-sans", className)}>
+      {/* Header Bar */}
+      <div className="px-4 py-3 border-b border-white/10 relative z-20 flex items-center justify-between bg-zinc-950/90 backdrop-blur-xl flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 text-white">
+            <Bot className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-sm font-bold text-white tracking-wide">ExplainX</h1>
+              <span className="px-1.5 py-0.2 text-[9px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded">
+                AI
               </span>
             </div>
+            <span className="text-[10px] text-white/50 font-mono">
+              {provider === "groq" ? "Groq (Fast)" : "Gemini (Vision)"}
+            </span>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setSetupMode(!setupMode)}
-              className={cn(
-                "p-2 rounded-lg transition-colors",
-                setupMode ? "bg-white/20 text-white" : "hover:bg-white/10 text-white/70 hover:text-white"
-              )}
-              title="API Key Settings"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleClear}
-              className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
-              title="Clear Conversation"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-red-500/20 text-white/70 hover:text-red-400 transition-colors"
-                title="Close Sidebar"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {/* Export Chat */}
+          <button
+            onClick={handleExport}
+            disabled={messages.length === 0}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Export Conversation (.md)"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+
+          {/* Clear Chat */}
+          <button
+            onClick={handleClear}
+            disabled={messages.length === 0}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Clear Chat History"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+
+          {/* Settings Toggle */}
+          <button
+            onClick={() => setSetupMode(!setupMode)}
+            className={cn(
+              "p-1.5 rounded-lg transition-colors",
+              setupMode ? "bg-blue-600 text-white" : "hover:bg-white/10 text-white/70 hover:text-white"
             )}
-          </div>
-        </div>
+            title="API Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
 
-        {/* Setup / API Key Modal Panel */}
-        <AnimatePresence>
-          {setupMode && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="px-4 py-3 border-b border-white/10 relative z-20 bg-gray-900/90 backdrop-blur-md space-y-2.5 overflow-hidden"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-blue-400" /> AI Provider & Key
-                </span>
-                {keyError && (
-                  <span className="text-[11px] text-red-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" /> Key Error
-                  </span>
-                )}
-              </div>
-
-              {keyError && (
-                <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-[11px] text-red-300">
-                  {keyError}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setProvider("groq")}
-                  className={cn(
-                    "px-3 py-1.5 text-xs rounded-lg font-medium border transition-all text-center",
-                    provider === "groq"
-                      ? "bg-blue-600/30 border-blue-500 text-white shadow-sm"
-                      : "bg-black/40 border-white/10 text-white/60 hover:text-white"
-                  )}
-                >
-                  ⚡ Groq (Fast)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProvider("gemini")}
-                  className={cn(
-                    "px-3 py-1.5 text-xs rounded-lg font-medium border transition-all text-center",
-                    provider === "gemini"
-                      ? "bg-purple-600/30 border-purple-500 text-white shadow-sm"
-                      : "bg-black/40 border-white/10 text-white/60 hover:text-white"
-                  )}
-                >
-                  👁️ Gemini (Photos)
-                </button>
-              </div>
-
-              <div>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => {
-                    setApiKey(e.target.value);
-                    setKeyError(null);
-                  }}
-                  placeholder={`Paste ${provider === "groq" ? "Groq (gsk_...)" : "Gemini"} API Key`}
-                  className={cn(
-                    "w-full px-3 py-1.5 text-xs bg-black/60 rounded-lg border text-white placeholder-white/40 focus:outline-none transition-all",
-                    keyError ? "border-red-500/80 focus:ring-1 focus:ring-red-500" : "border-white/15 focus:ring-1 focus:ring-blue-500"
-                  )}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveKey}
-                  className={cn(
-                    "flex-1 py-1.5 px-3 text-xs rounded-lg font-medium transition-all flex items-center justify-center gap-1.5",
-                    saveSuccess
-                      ? "bg-green-600 text-white"
-                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30"
-                  )}
-                >
-                  {saveSuccess ? (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Saved!
-                    </>
-                  ) : (
-                    "Save & Connect"
-                  )}
-                </button>
-                {hasKey && (
-                  <button
-                    onClick={() => setSetupMode(false)}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/15 text-white/70"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Chat Messages Scrolling Area */}
-        <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-3 text-sm flex flex-col relative z-10">
-          {messages.length === 0 && !setupMode && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-3.5 py-3 rounded-2xl max-w-[85%] bg-white/10 text-white/90 self-start backdrop-blur-md border border-white/10"
-            >
-              <div className="font-semibold mb-1 text-xs text-blue-300">👋 Welcome to ExplainX</div>
-              <div className="text-xs text-white/80 leading-relaxed">
-                I can help you understand code, explain concepts, answer questions, or analyze photos!
-              </div>
-            </motion.div>
-          )}
-
-          {messages.map((msg, i) => (
-            <motion.div
-              key={msg.id || i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={cn(
-                "px-3.5 py-2.5 rounded-2xl max-w-[85%] shadow-md backdrop-blur-md whitespace-pre-wrap break-words text-xs leading-relaxed",
-                msg.role === "assistant"
-                  ? msg.isError
-                    ? "bg-red-950/60 border border-red-500/40 text-red-200 self-start"
-                    : "bg-white/10 border border-white/10 text-white self-start"
-                  : "bg-blue-600 text-white font-medium self-end shadow-blue-900/40"
-              )}
-            >
-              {msg.imageUrl && (
-                <img
-                  src={msg.imageUrl}
-                  alt="Uploaded preview"
-                  className="max-h-48 max-w-full rounded-lg mb-2 object-cover border border-white/15 block"
-                />
-              )}
-              {msg.content}
-              {msg.isError && (
-                <button
-                  onClick={() => setSetupMode(true)}
-                  className="mt-2 block text-[11px] underline text-blue-300 hover:text-blue-200 font-normal"
-                >
-                  🔑 Click here to update your API key
-                </button>
-              )}
-            </motion.div>
-          ))}
-
-          {/* Live Streaming Response Preview */}
-          {isTyping && streamText && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-3.5 py-2.5 rounded-2xl max-w-[85%] bg-white/10 border border-white/10 text-white self-start whitespace-pre-wrap break-words text-xs leading-relaxed"
-            >
-              {streamText}
-            </motion.div>
-          )}
-
-          {/* Typing Pulse Dots */}
-          {isTyping && !streamText && (
-            <motion.div
-              className="flex items-center gap-1 px-3 py-2 rounded-2xl max-w-[30%] bg-white/10 border border-white/10 self-start"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0.6, 1] }}
-              transition={{ repeat: Infinity, duration: 1.2 }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse delay-150"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse delay-300"></span>
-            </motion.div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Image Attachment Preview */}
-        {pendingImage && (
-          <div className="px-4 py-2 border-t border-white/10 relative z-10 bg-black/60 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img
-                src={pendingImage}
-                alt="Selected"
-                className="w-12 h-12 rounded-lg object-cover border border-white/20"
-              />
-              <span className="text-[11px] text-white/70">Photo attached for analysis</span>
-            </div>
+          {/* Close Sidebar */}
+          {onClose && (
             <button
-              onClick={() => setPendingImage(null)}
-              className="p-1 rounded-full bg-white/10 hover:bg-red-500/30 text-white/70 hover:text-red-300 transition-colors"
-              title="Remove photo"
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/70 hover:text-red-400 transition-colors ml-1"
+              title="Close Sidebar"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
-          </div>
+          )}
+        </div>
+      </div>
+
+      {/* Setup / API Key Panel */}
+      <AnimatePresence>
+        {setupMode && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 py-3.5 border-b border-white/10 relative z-20 bg-zinc-900/95 backdrop-blur-xl space-y-3 flex-shrink-0 overflow-hidden shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-blue-400" /> AI Provider & Key Settings
+              </span>
+              {keyError && (
+                <span className="text-[11px] text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Key Error
+                </span>
+              )}
+            </div>
+
+            {keyError && (
+              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-[11px] text-red-300 leading-relaxed">
+                {keyError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setProvider("groq")}
+                className={cn(
+                  "px-3 py-2 text-xs rounded-lg font-medium border transition-all text-center flex items-center justify-center gap-1.5",
+                  provider === "groq"
+                    ? "bg-blue-600/30 border-blue-500 text-white shadow-sm"
+                    : "bg-black/40 border-white/10 text-white/60 hover:text-white"
+                )}
+              >
+                ⚡ Groq (Ultra-Fast)
+              </button>
+              <button
+                type="button"
+                onClick={() => setProvider("gemini")}
+                className={cn(
+                  "px-3 py-2 text-xs rounded-lg font-medium border transition-all text-center flex items-center justify-center gap-1.5",
+                  provider === "gemini"
+                    ? "bg-purple-600/30 border-purple-500 text-white shadow-sm"
+                    : "bg-black/40 border-white/10 text-white/60 hover:text-white"
+                )}
+              >
+                👁️ Gemini (Vision)
+              </button>
+            </div>
+
+            <div>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  setKeyError(null);
+                }}
+                placeholder={`Paste ${provider === "groq" ? "Groq API Key (gsk_...)" : "Gemini API Key"}`}
+                className={cn(
+                  "w-full px-3 py-2 text-xs bg-black/60 rounded-lg border text-white placeholder-white/40 focus:outline-none transition-all",
+                  keyError ? "border-red-500/80 focus:ring-1 focus:ring-red-500" : "border-white/15 focus:ring-1 focus:ring-blue-500"
+                )}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveKey}
+                className={cn(
+                  "flex-1 py-2 px-3 text-xs rounded-lg font-medium transition-all flex items-center justify-center gap-1.5",
+                  saveSuccess
+                    ? "bg-green-600 text-white"
+                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30"
+                )}
+              >
+                {saveSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Saved & Connected!
+                  </>
+                ) : (
+                  "Save & Connect"
+                )}
+              </button>
+              {hasKey && (
+                <button
+                  onClick={() => setSetupMode(false)}
+                  className="px-3 py-2 text-xs rounded-lg bg-white/10 hover:bg-white/15 text-white/70"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Messages Scrolling Area */}
+      <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-4 text-sm flex flex-col relative z-10">
+        {messages.length === 0 && !setupMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-zinc-900/80 border border-white/10 text-white self-start backdrop-blur-md max-w-[90%] shadow-lg"
+          >
+            <div className="flex items-center gap-2 font-semibold text-xs text-blue-400 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Welcome to ExplainX
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed mb-3">
+              Ask anything, upload photos for visual analysis, or select text on any webpage to explain it!
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <span className="px-2 py-1 bg-white/5 rounded-md text-[11px] text-zinc-400 border border-white/5">
+                💡 Explain code & bugs
+              </span>
+              <span className="px-2 py-1 bg-white/5 rounded-md text-[11px] text-zinc-400 border border-white/5">
+                🖼️ Analyze screenshots
+              </span>
+              <span className="px-2 py-1 bg-white/5 rounded-md text-[11px] text-zinc-400 border border-white/5">
+                ⚡ Real-time AI answers
+              </span>
+            </div>
+          </motion.div>
         )}
 
-        {/* Input Bar */}
-        <div className="p-3 border-t border-white/10 relative z-10 bg-black/40 backdrop-blur-md flex items-center gap-2">
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                handleImageFile(e.target.files[0]);
-              }
-            }}
-          />
-
-          {/* Photo Upload Button */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
+        {messages.map((msg, i) => (
+          <motion.div
+            key={msg.id || i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
             className={cn(
-              "p-2 rounded-lg transition-colors flex-shrink-0",
-              pendingImage
-                ? "bg-blue-600/30 text-blue-300 border border-blue-500/40"
-                : "bg-white/10 hover:bg-white/20 text-white/70 hover:text-white"
+              "group relative max-w-[88%] rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-md",
+              msg.role === "assistant"
+                ? msg.isError
+                  ? "bg-red-950/70 border border-red-500/40 text-red-200 self-start"
+                  : "bg-zinc-900/90 border border-white/10 text-zinc-100 self-start"
+                : "bg-blue-600 text-white font-medium self-end shadow-blue-900/30"
             )}
-            title="Upload photo for AI analysis"
           >
-            <ImageIcon className="w-4 h-4" />
-          </button>
+            {/* Uploaded Image Preview */}
+            {msg.imageUrl && (
+              <img
+                src={msg.imageUrl}
+                alt="Uploaded"
+                className="max-h-52 max-w-full rounded-lg mb-2 object-cover border border-white/15 block"
+              />
+            )}
 
-          {/* Text Input */}
-          <input
-            className="flex-1 px-3 py-2 text-xs bg-black/60 rounded-lg border border-white/15 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder={pendingImage ? "Ask about this photo..." : "Type a message or paste image..."}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            onPaste={handlePaste}
-            disabled={!hasKey}
-          />
+            {/* Message Body */}
+            {msg.role === "assistant" && !msg.isError ? (
+              <div 
+                className="explainx-markdown" 
+                dangerouslySetInnerHTML={renderMarkdown(msg.content)} 
+              />
+            ) : (
+              <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+            )}
 
-          {/* Send Button */}
+            {/* Assistant Message Actions (Copy Button) */}
+            {msg.role === "assistant" && !msg.isError && (
+              <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] text-zinc-400 font-mono">
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <button
+                  onClick={() => handleCopyMessage(msg.id, msg.content)}
+                  className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-all flex items-center gap-1 text-[10px]"
+                  title="Copy message"
+                >
+                  {copiedId === msg.id ? (
+                    <>
+                      <Check className="w-3 h-3 text-green-400" />
+                      <span className="text-green-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Error Action */}
+            {msg.isError && (
+              <button
+                onClick={() => setSetupMode(true)}
+                className="mt-2.5 block text-[11px] font-medium text-blue-400 hover:text-blue-300 underline"
+              >
+                🔑 Click here to update your API key
+              </button>
+            )}
+          </motion.div>
+        ))}
+
+        {/* Live Streaming Response Preview */}
+        {isTyping && streamText && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-[88%] rounded-2xl px-4 py-3 bg-zinc-900/90 border border-white/10 text-zinc-100 self-start text-xs leading-relaxed shadow-md"
+          >
+            <div 
+              className="explainx-markdown" 
+              dangerouslySetInnerHTML={renderMarkdown(streamText)} 
+            />
+          </motion.div>
+        )}
+
+        {/* Typing Pulse Dots */}
+        {isTyping && !streamText && (
+          <motion.div
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl max-w-[25%] bg-zinc-900/80 border border-white/10 self-start"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0.6, 1] }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse delay-150"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse delay-300"></span>
+          </motion.div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Image Preview Banner */}
+      {pendingImage && (
+        <div className="px-4 py-2 border-t border-white/10 bg-zinc-950/90 backdrop-blur-md flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={pendingImage}
+              alt="Preview"
+              className="w-10 h-10 rounded-lg object-cover border border-white/20"
+            />
+            <div>
+              <span className="text-xs text-white font-medium block">Photo attached</span>
+              <span className="text-[10px] text-zinc-400">Ready for AI analysis</span>
+            </div>
+          </div>
           <button
-            onClick={handleSend}
-            disabled={(!input.trim() && !pendingImage) || isTyping || !hasKey}
-            className="p-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-md shadow-blue-900/30"
-            title="Send Message"
+            onClick={() => setPendingImage(null)}
+            className="p-1 rounded-full bg-white/10 hover:bg-red-500/30 text-white/70 hover:text-red-300 transition-colors"
+            title="Remove photo"
           >
-            <Send className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
+      )}
+
+      {/* Input Bar (Flushed to Bottom, Auto-Expanding) */}
+      <div className="p-3 border-t border-white/10 bg-zinc-950 flex items-end gap-2 flex-shrink-0 z-20">
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              handleImageFile(e.target.files[0]);
+            }
+          }}
+        />
+
+        {/* Photo Upload Button */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            "p-2.5 rounded-xl transition-all flex-shrink-0",
+            pendingImage
+              ? "bg-blue-600/30 text-blue-300 border border-blue-500/40"
+              : "bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10"
+          )}
+          title="Upload photo for AI analysis"
+        >
+          <ImageIcon className="w-4 h-4" />
+        </button>
+
+        {/* Auto-Expanding Textarea */}
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          disabled={!hasKey}
+          placeholder={
+            !hasKey
+              ? "Enter your API key above to start..."
+              : pendingImage
+              ? "Ask a question about this photo (Enter to send)..."
+              : "Type a message... (Shift+Enter for new line)"
+          }
+          className="flex-1 min-h-[38px] max-h-[120px] py-2 px-3 text-xs bg-zinc-900/90 text-white placeholder-zinc-500 rounded-xl border border-white/15 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-y-auto leading-relaxed"
+        />
+
+        {/* Send Button */}
+        <button
+          onClick={handleSend}
+          disabled={(!input.trim() && !pendingImage) || isTyping || !hasKey}
+          className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-md shadow-blue-900/40 flex items-center justify-center"
+          title="Send message (Enter)"
+        >
+          <Send className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
