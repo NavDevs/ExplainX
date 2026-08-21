@@ -4,7 +4,7 @@ import { Mode } from './storage';
 
 const API_ENDPOINTS: Record<string, string> = {
   openai: 'https://api.openai.com/v1/chat/completions',
-  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
   anthropic: 'https://api.anthropic.com/v1/messages',
   groq: 'https://api.groq.com/openai/v1/chat/completions',
 };
@@ -255,28 +255,35 @@ async function callPollinations(prompt: string, signal: AbortSignal): Promise<st
 }
 
 async function callGroq(prompt: string, apiKey: string, signal: AbortSignal): Promise<string> {
-  const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
-    method: 'POST',
-    signal,
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MODELS['groq'],
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 800,
-      temperature: 0.3,
-    }),
-  });
+  let lastErr: any = null;
+  for (const modelName of GROQ_FALLBACK_MODELS) {
+    try {
+      const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
+        method: 'POST',
+        signal,
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 800,
+          temperature: 0.3,
+        }),
+      });
 
-  const data = await res.json();
-  
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error('Groq returned an empty response.');
+      const data = await res.json();
+      if (!data.choices || data.choices.length === 0) {
+        throw new Error('Groq returned an empty response.');
+      }
+      return data.choices[0].message.content;
+    } catch (err: any) {
+      lastErr = err;
+      if (err.message?.includes('Invalid API key')) throw err;
+    }
   }
-
-  return data.choices[0].message.content;
+  throw lastErr || new Error('Groq API failed.');
 }
 
 async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal): Promise<string> {
