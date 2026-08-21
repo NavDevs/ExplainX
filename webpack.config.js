@@ -1,5 +1,6 @@
-﻿const path = require('path');
+const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
   entry: {
@@ -18,7 +19,7 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          'style-loader',
+          MiniCssExtractPlugin.loader,
           'css-loader',
           'postcss-loader',
         ],
@@ -37,6 +38,9 @@ module.exports = {
     clean: true,
   },
   plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].css',
+    }),
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: '.' },
