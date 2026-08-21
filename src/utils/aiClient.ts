@@ -303,7 +303,8 @@ async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal
 export async function callAIChat(
   messages: Array<{role: 'user' | 'assistant' | 'system', content: string | any[]}>,
   maxTokens: number = 1000,
-  imageUrl?: string
+  imageUrl?: string,
+  onUpdate?: (text: string) => void
 ): Promise<string> {
   const settings = await getStoredSettings();
   const finalApiKey = settings.apiKey;
@@ -323,8 +324,6 @@ export async function callAIChat(
     if (lastUserIdx !== -1) {
       const userMsg = messages[lastUserIdx];
       const textContent = typeof userMsg.content === 'string' ? userMsg.content : '';
-      // Format depends on provider, but we prepare a generic structure here
-      // Individual provider functions will handle their own format
       messages[lastUserIdx] = {
         ...userMsg,
         content: [{ type: 'text', text: textContent || 'What is in this image?' }, { type: 'image_url', image_url: { url: imageUrl } }]
@@ -339,11 +338,11 @@ export async function callAIChat(
       } else if (finalProvider === 'anthropic') {
         return await callAnthropicChat(messages, finalApiKey, controller.signal, maxTokens);
       } else if (finalProvider === 'gemini') {
-        return await callGeminiChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callGeminiChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
       } else if (finalProvider === 'groq') {
-        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
       } else {
-        return await callOpenAIChat(messages, finalApiKey, controller.signal, maxTokens);
+        return await callOpenAIChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
       }
     });
   } catch (err: any) {
@@ -413,13 +412,42 @@ async function callPollinationsChat(
   return data.choices[0].message.content;
 }
 
+async function processOpenAIStream(res: Response, onUpdate?: (text: string) => void): Promise<string> {
+  if (!res.body) throw new Error('No response body');
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+        try {
+          const data = JSON.parse(line.substring(6));
+          if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+            fullText += data.choices[0].delta.content;
+            if (onUpdate) onUpdate(fullText);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+  return fullText;
+}
+
 async function callOpenAIChat(
   messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
-  maxTokens: number
+  maxTokens: number,
+  onUpdate?: (text: string) => void
 ): Promise<string> {
-  const res = await fetchWithRetry(API_ENDPOINTS['openai'], {
+  const res = await fetch(API_ENDPOINTS['openai'], {
     method: 'POST',
     signal,
     headers: {
@@ -431,18 +459,20 @@ async function callOpenAIChat(
       messages,
       max_tokens: maxTokens,
       temperature: 0.7,
+      stream: true,
     }),
   });
 
-  const data = await res.json();
-  return data.choices[0].message.content;
+  if (!res.ok) throw new Error('OpenAI API Error: ' + res.statusText);
+  return await processOpenAIStream(res, onUpdate);
 }
 
 async function callGroqChat(
   messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
-  maxTokens: number
+  maxTokens: number,
+  onUpdate?: (text: string) => void
 ): Promise<string> {
   const cleanMessages = await Promise.all(messages.map(async m => {
     let textContent = m.content;
@@ -481,7 +511,7 @@ async function callGroqChat(
     return { role: m.role, content: textContent };
   }));
 
-  const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
+  const res = await fetch(API_ENDPOINTS['groq'], {
     method: 'POST',
     signal,
     headers: {
@@ -493,16 +523,41 @@ async function callGroqChat(
       messages: cleanMessages,
       max_tokens: maxTokens,
       temperature: 0.7,
+      stream: true,
     }),
   });
 
-  const data = await res.json();
-  
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error('Groq returned an empty response.');
-  }
+  if (!res.ok) throw new Error('Groq API Error: ' + res.statusText);
 
-  return data.choices[0].message.content;
+  return await processOpenAIStream(res, onUpdate);
+}
+
+async function processGeminiStream(res: Response, onUpdate?: (text: string) => void): Promise<string> {
+  if (!res.body) throw new Error('No response body');
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.substring(6));
+          if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+            fullText += data.candidates[0].content.parts[0].text;
+            if (onUpdate) onUpdate(fullText);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+  return fullText;
 }
 
 // Gemini chat endpoint
@@ -510,9 +565,9 @@ async function callGeminiChat(
   messages: Array<{role: string, content: string | any[]}>,
   apiKey: string,
   signal: AbortSignal,
-  maxTokens: number
+  maxTokens: number,
+  onUpdate?: (text: string) => void
 ): Promise<string> {
-  // Gemini doesn't support system messages, convert to user message
   const geminiMessages = messages.map(msg => {
     if (msg.role === 'system') {
       return { role: 'user', content: typeof msg.content === 'string' ? `System: ${msg.content}` : msg.content };
@@ -520,7 +575,6 @@ async function callGeminiChat(
     return msg;
   });
 
-  // Gemini expects different format - handle image content
   const contents = geminiMessages.map(msg => {
     if (Array.isArray(msg.content)) {
       const parts: any[] = [];
@@ -528,7 +582,6 @@ async function callGeminiChat(
         if (part.type === 'text') {
           parts.push({ text: part.text });
         } else if (part.type === 'image_url' && part.image_url?.url) {
-          // Parse base64 data URL
           const dataUrl = part.image_url.url;
           const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
           if (match) {
@@ -541,7 +594,10 @@ async function callGeminiChat(
     return { parts: [{ text: msg.content as string }] };
   });
 
-  const url = `${API_ENDPOINTS['gemini']}?key=${encodeURIComponent(apiKey)}`;
+  let baseUrl = API_ENDPOINTS['gemini'];
+  baseUrl = baseUrl.replace(':generateContent', ':streamGenerateContent');
+  const url = `${baseUrl}?alt=sse&key=${encodeURIComponent(apiKey)}`;
+  
   const res = await fetch(url, {
     method: 'POST',
     signal,
@@ -552,37 +608,8 @@ async function callGeminiChat(
     }),
   });
 
-  if (res.status === 400 || res.status === 403) throw new Error('Invalid Gemini API key. Please check your ExplainX Settings.');
-  if (res.status === 429) throw new Error('Too many requests. Please wait a moment.');
-  if (!res.ok) {
-    let errorMsg = res.statusText || 'Unknown Error';
-    try {
-      const errorJson = await res.json();
-      if (errorJson.error && errorJson.error.message) {
-        errorMsg = errorJson.error.message;
-      }
-    } catch (_) {}
-    throw new Error(`Gemini API Error: ${res.status} - ${errorMsg}`);
-  }
-
-  const data = await res.json();
-  
-  if (!data.candidates || data.candidates.length === 0) {
-    if (data.promptFeedback && data.promptFeedback.blockReason) {
-      throw new Error(`Google Safety Filter Blocked this request: ${data.promptFeedback.blockReason}`);
-    }
-    throw new Error('Google Gemini returned an empty response. Try a different snippet.');
-  }
-
-  const content = data.candidates[0].content;
-  if (!content || !content.parts || content.parts.length === 0) {
-     if (data.candidates[0].finishReason === 'SAFETY') {
-       throw new Error('Google Safety Filter Blocked this request (Political/Explicit content).');
-     }
-     throw new Error('Google Gemini returned an empty explanation.');
-  }
-
-  return content.parts[0].text;
+  if (!res.ok) throw new Error('Gemini API Error: ' + res.statusText);
+  return await processGeminiStream(res, onUpdate);
 }
 
 // Anthropic chat endpoint

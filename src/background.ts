@@ -125,9 +125,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       ...conversationHistory.map((msg: any) => ({ role: msg.role, content: msg.content, imageUrl: msg.imageUrl }))
     ];
     
-    callAIChat(aiMessages, 1000, imageUrl)
+    callAIChat(aiMessages, 1000, imageUrl, (partialText) => {
+      chrome.tabs.sendMessage(tabId, {
+        type: 'CHAT_CHUNK',
+        text: partialText
+      }).catch(() => {});
+    })
       .then((response) => {
-        const assistantMsg: ChatMessage = {
+        const assistantMsg = {
           id: generateId(),
           role: 'assistant',
           content: response,
@@ -137,16 +142,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.sendMessage(tabId, {
           type: 'CHAT_RESPONSE',
           message: assistantMsg
-        });
+        }).catch(() => {});
       })
       .catch((err) => {
         chrome.tabs.sendMessage(tabId, {
           type: 'CHAT_ERROR',
           error: err.message
-        });
+        }).catch(() => {});
       });
     
-    return false;
+    return true; // Keep message channel open
   }
   
   return false;

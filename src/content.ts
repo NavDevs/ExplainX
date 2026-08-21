@@ -27,7 +27,9 @@ let sidebarVisible = false;
 let chatMessages: ChatMessage[] = [];
 let isLoading = false;
 let isDarkMode = true;
-let pendingImageUrl: string | null = null; 
+let pendingImageUrl: string | null = null;
+let currentStreamingDiv: HTMLElement | null = null;
+let lastRenderTime = 0; 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'GET_SELECTION') {
@@ -88,9 +90,67 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 
+  if (request.type === 'CHAT_CHUNK') {
+    removeLoadingFromChat();
+    const chatBody = document.getElementById('chat-body');
+    if (!chatBody) return false;
+    
+    if (!currentStreamingDiv) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'chat-message assistant';
+      msgDiv.innerHTML = `<div class="message-content"></div>`;
+      chatBody.appendChild(msgDiv);
+      currentStreamingDiv = msgDiv.querySelector('.message-content') as HTMLElement;
+    }
+    
+    // Throttle markdown parsing to prevent UI freezing
+    const now = Date.now();
+    if (now - lastRenderTime > 50) {
+      currentStreamingDiv.innerHTML = marked.parse(request.text) as string;
+      lastRenderTime = now;
+      scrollToBottom();
+    }
+    return false;
+  }
+
   if (request.type === 'CHAT_RESPONSE') {
     removeLoadingFromChat();
-    appendChatMessage(request.message);
+    if (currentStreamingDiv) {
+      // Final render
+      currentStreamingDiv.innerHTML = marked.parse(request.text) as string;
+      
+      // Add copy button
+      const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(request.text)}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </button>`;
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'message-actions';
+      actionsDiv.innerHTML = copyBtn;
+      currentStreamingDiv.parentElement?.appendChild(actionsDiv);
+      
+      const fullMsg = {
+        id: generateId(),
+        role: 'assistant',
+        content: request.text,
+        timestamp: Date.now()
+      };
+      
+      currentStreamingDiv = null;
+      enhanceCodeBlocks();
+      scrollToBottom(true);
+      
+      // Save it to memory
+      chatMessages.push(fullMsg as any);
+      saveChatMessage(fullMsg as any);
+    } else {
+      const fullMsg = {
+        id: generateId(),
+        role: 'assistant',
+        content: request.text,
+        timestamp: Date.now()
+      };
+      appendChatMessage(fullMsg as any, true, false);
+    }
     return false;
   }
 
