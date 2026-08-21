@@ -25,7 +25,6 @@
         "content.js"
       ],
       "css": [
-        "content.css",
         "styles/content.css"
       ],
       "run_at": "document_end"
