@@ -4,14 +4,14 @@ import { Mode } from './storage';
 
 const API_ENDPOINTS: Record<string, string> = {
   openai: 'https://api.openai.com/v1/chat/completions',
-  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
   anthropic: 'https://api.anthropic.com/v1/messages',
   groq: 'https://api.groq.com/openai/v1/chat/completions',
 };
 
 const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-1.5-flash',
+  gemini: 'gemini-1.5-flash-latest',
   anthropic: 'claude-3-5-sonnet-20241022',
   groq: 'llama-3.1-8b-instant',
 };
