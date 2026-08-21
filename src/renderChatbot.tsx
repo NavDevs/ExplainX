@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import AIChatCard from './components/ui/ai-chat';
+// @ts-ignore - Webpack handles this CSS import
+import './styles/globals.css';
 
 /**
  * Mounts the ExplainX React chatbot inside a Shadow DOM attached to `hostContainer`.
