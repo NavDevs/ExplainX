@@ -64,7 +64,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
           const errMsg: ChatMsg = {
             id: "err_" + Date.now(),
             role: "assistant",
-            content: "\u26a0\ufe0f Error: " + request.error,
+            content: "⚠️ Error: " + request.error,
             timestamp: Date.now(),
           };
           const updated = [...prev, errMsg];
@@ -167,7 +167,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
 
         {/* Header */}
         <div className="px-4 py-3 border-b border-white/10 relative z-10 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">\ud83e\udd16 ExplainX</h2>
+          <h2 className="text-lg font-semibold text-white">🤖 ExplainX</h2>
           <div className="flex items-center gap-2">
             <button onClick={() => setSetupMode(!setupMode)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="Settings">
               <Settings className="w-4 h-4 text-white/60" />
@@ -220,7 +220,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               animate={{ opacity: 1, y: 0 }}
               className="px-3 py-2 rounded-xl max-w-[80%] bg-white/10 text-white self-start"
             >
-              \ud83d\udc4b Hello! I'm your AI assistant. Ask me anything!
+              👋 Hello! I'm your AI assistant. Ask me anything!
             </motion.div>
           )}
           {messages.map((msg, i) => (
