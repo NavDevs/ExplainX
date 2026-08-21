@@ -13,8 +13,16 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-2.5-flash',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.1-8b-instant',
+  groq: 'llama-3.3-70b-versatile',
 };
+
+const GROQ_FALLBACK_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+  'gemma2-9b-it',
+  'mixtral-8x7b-32768',
+];
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
 
@@ -496,37 +504,59 @@ async function callGroqChat(
     return { role: m.role, content: textContent };
   }));
 
-  const res = await fetch(API_ENDPOINTS['groq'], {
-    method: 'POST',
-    signal,
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MODELS['groq'],
-      messages: cleanMessages,
-      max_tokens: maxTokens,
-      temperature: 0.7,
-      stream: true,
-    }),
-  });
+  let lastErrorDetail = '';
 
-  if (!res.ok) {
-    let errorDetail = '';
+  for (const modelName of GROQ_FALLBACK_MODELS) {
     try {
-      const errData = await res.json();
-      errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
-    } catch (e) {
-      errorDetail = res.statusText || `HTTP ${res.status}`;
+      const res = await fetch(API_ENDPOINTS['groq'], {
+        method: 'POST',
+        signal,
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: cleanMessages,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+          stream: true,
+        }),
+      });
+
+      if (res.ok) {
+        return await processOpenAIStream(res, onUpdate);
+      }
+
+      let errorDetail = '';
+      try {
+        const errData = await res.json();
+        errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
+      } catch (e) {
+        errorDetail = res.statusText || `HTTP ${res.status}`;
+      }
+
+      lastErrorDetail = errorDetail;
+
+      if (res.status === 401 || errorDetail.toLowerCase().includes('api key') || errorDetail.toLowerCase().includes('invalid')) {
+        throw new Error('Invalid API key for Groq. Please check or re-enter your API key in settings.');
+      }
+
+      // If model not found (404 / model_not_found), try next fallback model
+      if (res.status === 404 || errorDetail.toLowerCase().includes('model') || errorDetail.toLowerCase().includes('does not exist')) {
+        continue;
+      }
+
+      throw new Error(`Groq API Error (${res.status}): ${errorDetail}`);
+    } catch (err: any) {
+      if (err.message.includes('Invalid API key')) throw err;
+      if (modelName === GROQ_FALLBACK_MODELS[GROQ_FALLBACK_MODELS.length - 1]) {
+        throw err;
+      }
     }
-    if (res.status === 401 || errorDetail.toLowerCase().includes('api key') || errorDetail.toLowerCase().includes('invalid')) {
-      throw new Error('Invalid API key for Groq. Please check or re-enter your API key in settings.');
-    }
-    throw new Error(`Groq API Error (${res.status}): ${errorDetail}`);
   }
 
-  return await processOpenAIStream(res, onUpdate);
+  throw new Error(`Groq API Error: ${lastErrorDetail || 'No supported Groq model available.'}`);
 }
 
 async function processGeminiStream(res: Response, onUpdate?: (text: string) => void): Promise<string> {
