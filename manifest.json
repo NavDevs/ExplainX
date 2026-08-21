@@ -49,7 +49,10 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "icons/*"
+        "icons/*",
+        "content.css",
+        "styles/content.css",
+        "styles/ai-chat.css"
       ],
       "matches": [
         "<all_urls>"
