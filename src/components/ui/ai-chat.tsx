@@ -682,13 +682,24 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       )}
 
       {/* Input Bar (Flushed to Bottom, Auto-Expanding) */}
-      <div className="p-3 border-t border-white/10 bg-zinc-950 flex items-end gap-2 flex-shrink-0 z-20">
+      {/* Input Bar - all inline styles to prevent host page CSS override */}
+      <div style={{
+        padding: "10px 12px",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        background: "#09090b",
+        display: "flex",
+        alignItems: "flex-end",
+        gap: "8px",
+        flexShrink: 0,
+        zIndex: 20,
+        boxSizing: "border-box",
+      }}>
         {/* Hidden File Input */}
         <input
           type="file"
           ref={fileInputRef}
           accept="image/*"
-          className="hidden"
+          style={{ display: "none" }}
           onChange={(e) => {
             if (e.target.files && e.target.files[0]) {
               handleImageFile(e.target.files[0]);
@@ -700,15 +711,25 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "p-2.5 rounded-xl transition-all flex-shrink-0",
-            pendingImage
-              ? "bg-blue-600/30 text-blue-300 border border-blue-500/40"
-              : "bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10"
-          )}
           title="Upload photo for AI analysis"
+          style={{
+            width: "38px",
+            height: "38px",
+            borderRadius: "10px",
+            border: pendingImage ? "1px solid rgba(96,165,250,0.5)" : "1px solid rgba(255,255,255,0.15)",
+            background: pendingImage ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.06)",
+            color: pendingImage ? "#60a5fa" : "rgba(255,255,255,0.7)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            transition: "all 0.2s",
+            padding: 0,
+            boxSizing: "border-box",
+          }}
         >
-          <ImageIcon className="w-4 h-4" />
+          <ImageIcon style={{ width: "16px", height: "16px" }} />
         </button>
 
         {/* Auto-Expanding Textarea */}
@@ -724,20 +745,53 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
             !hasKey
               ? "Enter your API key above to start..."
               : pendingImage
-              ? "Ask a question about this photo (Enter to send)..."
+              ? "Ask about this photo... (Enter to send)"
               : "Type a message... (Shift+Enter for new line)"
           }
-          className="flex-1 min-h-[38px] max-h-[120px] py-2 px-3 text-xs bg-zinc-900/90 text-white placeholder-zinc-500 rounded-xl border border-white/15 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-y-auto leading-relaxed"
+          style={{
+            flex: 1,
+            minHeight: "38px",
+            maxHeight: "120px",
+            padding: "9px 12px",
+            fontSize: "13px",
+            lineHeight: "1.5",
+            color: "#f4f4f5",
+            background: "#27272a",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "10px",
+            outline: "none",
+            resize: "none",
+            overflowY: "auto",
+            fontFamily: "inherit",
+            boxSizing: "border-box",
+            caretColor: "#60a5fa",
+          }}
         />
 
         {/* Send Button */}
         <button
           onClick={handleSend}
           disabled={(!input.trim() && !pendingImage) || isTyping || !hasKey}
-          className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-md shadow-blue-900/40 flex items-center justify-center"
           title="Send message (Enter)"
+          style={{
+            width: "38px",
+            height: "38px",
+            borderRadius: "10px",
+            background: "rgb(37,99,235)",
+            border: "none",
+            color: "white",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            opacity: ((!input.trim() && !pendingImage) || isTyping || !hasKey) ? 0.4 : 1,
+            transition: "all 0.2s",
+            padding: 0,
+            boxSizing: "border-box",
+          }}
         >
-          <Send className="w-4 h-4" />
+          <Send style={{ width: "16px", height: "16px" }} />
         </button>
       </div>
     </div>
