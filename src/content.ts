@@ -215,11 +215,18 @@ async function showChatSidebar() {
   
   // Guarantee we know the latest user preference every time we open!
   // Safely wrap in a Promise to support all Chrome versions
-  isDarkMode = await new Promise((resolve) => {
-    chrome.storage.local.get(['isDarkMode'], (result) => {
-      resolve(!!result?.isDarkMode);
+  const settings: any = await new Promise((resolve) => {
+    chrome.storage.local.get(['isDarkMode'], (localRes) => {
+      chrome.storage.sync.get(['explainx_api_key', 'explainx_provider'], (syncRes) => {
+        resolve({
+          isDarkMode: !!localRes?.isDarkMode,
+          apiKey: syncRes?.explainx_api_key,
+          provider: syncRes?.explainx_provider || 'groq'
+        });
+      });
     });
   });
+  isDarkMode = settings.isDarkMode;
 
   const overlay = getOrCreateOverlay();
   const toggleBtn = getOrCreateToggle();
@@ -233,6 +240,17 @@ async function showChatSidebar() {
   toggleBtn.classList.add('hidden');
   
   chatMessages = await getChatMessages();
+
+  let missingKeyHtml = '';
+  if (!settings.apiKey || settings.apiKey.trim().length === 0) {
+    const greetingMsg = {
+      id: generateId(),
+      role: 'assistant' as const,
+      content: `👋 **Welcome to ExplainX!**\n\nTo start chatting and analyzing images, you need to connect your AI provider.\n\n1. Click the **ExplainX extension icon** in your browser toolbar (puzzle piece icon).\n2. Open **Settings**.\n3. Paste your API Key for **${settings.provider.toUpperCase()}**.\n\n*Don't have one? You can get a free key from Groq or Google Gemini!*`,
+      timestamp: Date.now()
+    };
+    missingKeyHtml = renderChatMessage(greetingMsg);
+  }
 
   pendingImageUrl = null;
 
@@ -250,6 +268,7 @@ async function showChatSidebar() {
         </div>
       </div>
       <div class="explainx-chat-body" id="chat-body">
+        ${missingKeyHtml}
         ${chatMessages.map(msg => renderChatMessage(msg)).join('')}
       </div>
       <div id="image-preview-container" class="explainx-image-preview" style="display:none;"></div>
