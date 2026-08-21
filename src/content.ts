@@ -760,3 +760,17 @@ function hideSidebar() {
 
 // Automatically create the floating toggle button on every targeted webpage so it is always accessible!
 getOrCreateToggle();
+
+// Protect the toggle button from being removed by Single Page Applications (SPAs)
+const observer = new MutationObserver(() => {
+  if (document.body && !document.getElementById('explainx-toggle-btn') && !document.getElementById('explainx-overlay')) {
+    getOrCreateToggle();
+  }
+});
+if (document.body) {
+  observer.observe(document.body, { childList: true, subtree: true });
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}

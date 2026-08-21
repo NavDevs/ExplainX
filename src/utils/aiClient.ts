@@ -125,8 +125,13 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
 
   // Fetch actual user settings
   const settings = await getStoredSettings();
-  let finalApiKey = DEFAULT_GROQ_KEY;
-  let finalProvider = 'groq';
+  const finalApiKey = settings.apiKey;
+  const finalProvider = settings.provider;
+
+  // API key must be provided by user in extension settings
+  if (!finalApiKey || finalApiKey.trim().length === 0) {
+    throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
+  }
 
   const prompt = buildPrompt(text, mode);
   const controller = new AbortController();
@@ -279,8 +284,13 @@ export async function callAIChat(
 ): Promise<string> {
   // Fetch actual user settings
   const settings = await getStoredSettings();
-  let finalApiKey = DEFAULT_GROQ_KEY;
-  let finalProvider = 'groq';
+  const finalApiKey = settings.apiKey;
+  const finalProvider = settings.provider;
+
+  // API key must be provided by user in extension settings
+  if (!finalApiKey || finalApiKey.trim().length === 0) {
+    throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for chat
