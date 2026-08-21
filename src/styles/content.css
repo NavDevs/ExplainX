@@ -1,26 +1,40 @@
 #explainx-overlay, #explainx-toggle-btn {
-  --bg-primary: #08080E;
-  --bg-secondary: #0D0D18;
-  --bg-tertiary: #141424;
-  --bg-hover: #1A1A2A;
-  --glass-bg: rgba(8, 8, 14, 0.85);
+  /* Linear / Modern Design System */
+  --bg-primary: #050506;
+  --bg-secondary: #0a0a0c;
+  --bg-tertiary: #020203;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(5, 5, 6, 0.7);
+  
   --border-color: rgba(255, 255, 255, 0.06);
-  --border-focus: rgba(109, 90, 240, 0.4);
-  --text-primary: #F0EEF8;
-  --text-secondary: #6B697E;
-  --text-inverse: #08080E;
-  --accent-color: #6D5AF0;
-  --accent-hover: #9B59F5;
-  --accent-light: rgba(109, 90, 240, 0.15);
-  --accent-border: rgba(109, 90, 240, 0.3);
+  --border-hover: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(94, 106, 210, 0.3);
+  
+  --text-primary: #EDEDEF;
+  --text-secondary: #8A8F98;
+  --text-subtle: rgba(255, 255, 255, 0.6);
+  --text-inverse: #020203;
+  
+  --accent-color: #5E6AD2;
+  --accent-hover: #6872D9;
+  --accent-light: rgba(94, 106, 210, 0.15);
+  --accent-border: rgba(94, 106, 210, 0.3);
+  --accent-glow: rgba(94, 106, 210, 0.3);
+  
   --error-color: #FF5F56;
   --error-bg: rgba(255, 95, 86, 0.1);
-  --code-text: #FFBD2E;
-  --code-bg: #141424;
-  --pre-bg: #040406;
-  --shadow-color: rgba(0,0,0,0.7);
-  --shadow-hover: rgba(109, 90, 240, 0.3);
-  --transition-speed: 0.3s;
+  
+  --code-text: #F8F8F2;
+  --code-bg: #0F0F12;
+  --pre-bg: #050506;
+  
+  --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 20px rgba(0,0,0,0.4), 0 0 40px rgba(0,0,0,0.2);
+  --shadow-hover: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(94,106,210,0.1);
+  --shadow-accent: 0 0 0 1px rgba(94,106,210,0.5), 0 4px 12px rgba(94,106,210,0.3), inset 0 1px 0 0 rgba(255,255,255,0.2);
+  --shadow-inner: inset 0 1px 0 0 rgba(255,255,255,0.1);
+  
+  --transition-speed: 200ms;
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #explainx-overlay {

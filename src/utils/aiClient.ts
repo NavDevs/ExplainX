@@ -310,15 +310,13 @@ export async function callAIChat(
   const finalApiKey = settings.apiKey;
   const finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings (unless pollinations)
-  if (finalProvider !== 'pollinations' && (!finalApiKey || finalApiKey.trim().length === 0)) {
+  if (!finalApiKey || finalApiKey.trim().length === 0) {
     throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
   }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-  // If imageUrl is provided, modify the last user message to include the image
   if (imageUrl) {
     const lastUserIdx = messages.map(m => m.role).lastIndexOf('user');
     if (lastUserIdx !== -1) {
@@ -333,16 +331,10 @@ export async function callAIChat(
 
   try {
     return await requestQueue.add(async () => {
-      if (finalProvider === 'pollinations') {
-        return await callPollinationsChat(messages, controller.signal, maxTokens);
-      } else if (finalProvider === 'anthropic') {
-        return await callAnthropicChat(messages, finalApiKey, controller.signal, maxTokens);
-      } else if (finalProvider === 'gemini') {
+      if (finalProvider === 'gemini') {
         return await callGeminiChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
-      } else if (finalProvider === 'groq') {
-        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
       } else {
-        return await callOpenAIChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
+        return await callGroqChat(messages, finalApiKey, controller.signal, maxTokens, onUpdate);
       }
     });
   } catch (err: any) {

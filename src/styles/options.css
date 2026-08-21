@@ -1,13 +1,28 @@
 :root {
-  --bg-dark: #0f1114;
-  --bg-sidebar: #16191d;
-  --bg-card: #1c2126;
-  --accent: #8ab4f8;
-  --accent-hover: #aecbfa;
-  --text-primary: #e8eaed;
-  --text-secondary: #9aa0a6;
-  --border: rgba(255, 255, 255, 0.08);
-  --success: #81c995;
+  /* Linear / Modern Design System */
+  --bg-primary: #050506;
+  --bg-secondary: #0a0a0c;
+  --bg-tertiary: #020203;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(94, 106, 210, 0.3);
+  
+  --text-primary: #EDEDEF;
+  --text-secondary: #8A8F98;
+  --text-subtle: rgba(255, 255, 255, 0.6);
+  --text-inverse: #020203;
+  
+  --accent-color: #5E6AD2;
+  --accent-hover: #6872D9;
+  --accent-light: rgba(94, 106, 210, 0.15);
+  
+  --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 20px rgba(0,0,0,0.4), 0 0 40px rgba(0,0,0,0.2);
+  --shadow-hover: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(94,106,210,0.1);
+  
+  --transition-speed: 200ms;
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -72,19 +87,20 @@ nav {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
 .nav-item.active {
-  background: rgba(138, 180, 248, 0.1);
-  color: var(--accent);
-  font-weight: 500;
+  background: var(--accent-light);
+  color: var(--accent-color);
+  box-shadow: inset 2px 0 0 0 var(--accent-color);
 }
 
+/* Main Content */
 .main-content {
   flex: 1;
-  padding: 40px 60px;
+  padding: 48px;
   overflow-y: auto;
 }
 
@@ -93,118 +109,148 @@ header {
 }
 
 header h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
+  font-size: 2.25rem;
   font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 8px;
+  background: linear-gradient(to bottom, #ffffff, rgba(255,255,255,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.03em;
 }
 
 header p {
-  margin: 0;
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 1.05rem;
+  margin: 0;
 }
 
 .settings-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 30px;
-  max-width: 600px;
+  max-width: 640px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 .settings-section {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .settings-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 16px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-color);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-bottom: 20px;
 }
 
 label {
-  font-size: 14px;
+  display: block;
+  font-size: 0.9rem;
   font-weight: 500;
-}
-
-select {
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
+  margin-bottom: 8px;
 }
 
-select:focus {
-  border-color: var(--accent);
+select, input[type="password"] {
+  width: 100%;
+  background: #0F0F12 !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  padding: 12px 16px !important;
+  border-radius: 8px !important;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all var(--transition-speed) var(--ease-expo) !important;
+  box-sizing: border-box;
+  margin-top: 0 !important;
+}
+
+select:focus, input[type="password"]:focus {
+  outline: none !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px var(--accent-light) !important;
 }
 
 .hint {
-  font-size: 12px;
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
-.info-alert {
-  margin-top: 20px;
-  background: rgba(138, 180, 248, 0.05);
-  border: 1px solid rgba(138, 180, 248, 0.15);
-  border-radius: 8px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.info-alert p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--accent);
-}
-
 .settings-actions {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
   display: flex;
-  justify-content: flex-end;
   align-items: center;
-  gap: 20px;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
 }
 
 .primary-btn {
-  background: var(--accent);
-  color: var(--bg-dark);
+  background: var(--accent-color);
+  color: white;
   border: none;
-  padding: 10px 24px;
+  padding: 12px 24px;
   border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 600;
-  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-speed) var(--ease-expo);
+  box-shadow: var(--shadow-accent);
 }
 
 .primary-btn:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(94,106,210,0.5), 0 8px 24px rgba(94,106,210,0.4), inset 0 1px 0 0 rgba(255,255,255,0.2);
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
 }
 
 #status {
-  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
   font-weight: 500;
+  display: none;
 }
 
-.success {
-  color: var(--success);
+#status.success {
+  display: block;
+  background: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+#status.error {
+  display: block;
+  background: var(--error-bg);
+  color: var(--error-color);
+  border: 1px solid rgba(255, 95, 86, 0.2);
 }

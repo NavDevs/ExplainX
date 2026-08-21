@@ -303,30 +303,25 @@ async function showChatSidebar() {
 
   let missingKeyHtml = '';
   if (!settings.apiKey || settings.apiKey.trim().length === 0) {
-    if (settings.provider !== 'pollinations') {
-      missingKeyHtml = `
-        <div class="explainx-setup-container" style="padding: 20px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); margin: 15px;">
-          <h3 style="margin-top:0; color: var(--text-primary); font-size: 16px;">👋 Welcome to ExplainX</h3>
-          <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px;">To get started, please select your AI provider.</p>
-          
-          <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">Provider:</label>
-          <select id="inline-provider-select" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; background: var(--bg-primary); color: var(--text-primary);">
-            <option value="pollinations" ${settings.provider === 'pollinations' ? 'selected' : ''}>Free AI (No API Key Needed)</option>
-            <option value="groq" ${settings.provider === 'groq' ? 'selected' : ''}>Groq (Requires API Key)</option>
-            <option value="gemini" ${settings.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Requires API Key)</option>
-            <option value="openai" ${settings.provider === 'openai' ? 'selected' : ''}>OpenAI (Requires API Key)</option>
-            <option value="anthropic" ${settings.provider === 'anthropic' ? 'selected' : ''}>Anthropic (Requires API Key)</option>
-          </select>
+    missingKeyHtml = `
+      <div class="explainx-setup-container" style="padding: 20px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); margin: 15px;">
+        <h3 style="margin-top:0; color: var(--text-primary); font-size: 16px;">👋 Welcome to ExplainX</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px;">To get started, please select your AI provider.</p>
+        
+        <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">Provider:</label>
+        <select id="inline-provider-select" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; background: var(--bg-primary); color: var(--text-primary);">
+          <option value="groq" ${settings.provider === 'groq' ? 'selected' : ''}>Groq (Requires API Key)</option>
+          <option value="gemini" ${settings.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Requires API Key)</option>
+        </select>
 
-          <div id="inline-apikey-container">
-            <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">API Key:</label>
-            <input type="password" id="inline-apikey-input" placeholder="Paste your API key here..." style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" />
-          </div>
-          
-          <button id="inline-apikey-save" style="width:100%; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;">Connect & Start Chatting</button>
+        <div id="inline-apikey-container">
+          <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">API Key:</label>
+          <input type="password" id="inline-apikey-input" placeholder="Paste your API key here..." style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" />
         </div>
-      `;
-    }
+        
+        <button id="inline-apikey-save" style="width:100%; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;">Connect & Start Chatting</button>
+      </div>
+    `;
   }
 
   pendingImageUrl = null;
