@@ -243,13 +243,25 @@ async function showChatSidebar() {
 
   let missingKeyHtml = '';
   if (!settings.apiKey || settings.apiKey.trim().length === 0) {
-    const greetingMsg = {
-      id: generateId(),
-      role: 'assistant' as const,
-      content: `👋 **Welcome to ExplainX!**\n\nTo start chatting and analyzing images, you need to connect your AI provider.\n\n1. Click the **ExplainX extension icon** in your browser toolbar (puzzle piece icon).\n2. Open **Settings**.\n3. Paste your API Key for **${settings.provider.toUpperCase()}**.\n\n*Don't have one? You can get a free key from Groq or Google Gemini!*`,
-      timestamp: Date.now()
-    };
-    missingKeyHtml = renderChatMessage(greetingMsg);
+    missingKeyHtml = `
+      <div class="explainx-setup-container" style="padding: 20px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); margin: 15px;">
+        <h3 style="margin-top:0; color: var(--text-primary); font-size: 16px;">👋 Welcome to ExplainX</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px;">To get started, please connect your AI provider. You only need to do this once.</p>
+        
+        <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">Provider:</label>
+        <select id="inline-provider-select" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; background: var(--bg-primary); color: var(--text-primary);">
+          <option value="groq" ${settings.provider === 'groq' ? 'selected' : ''}>Groq (Super Fast, Free)</option>
+          <option value="gemini" ${settings.provider === 'gemini' ? 'selected' : ''}>Google Gemini (Free Tier)</option>
+          <option value="openai" ${settings.provider === 'openai' ? 'selected' : ''}>OpenAI (ChatGPT)</option>
+          <option value="anthropic" ${settings.provider === 'anthropic' ? 'selected' : ''}>Anthropic (Claude)</option>
+        </select>
+
+        <label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: bold; color: var(--text-secondary);">API Key:</label>
+        <input type="password" id="inline-apikey-input" placeholder="Paste your API key here..." style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-focus); margin-bottom: 15px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" />
+        
+        <button id="inline-apikey-save" style="width:100%; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;">Connect & Start Chatting</button>
+      </div>
+    `;
   }
 
   pendingImageUrl = null;
@@ -356,6 +368,28 @@ function exportConversation() {
 }
 
 function attachChatEventListeners() {
+  const saveBtn = document.getElementById('inline-apikey-save');
+  if (saveBtn) {
+    saveBtn.onclick = () => {
+      const input = document.getElementById('inline-apikey-input') as HTMLInputElement;
+      const select = document.getElementById('inline-provider-select') as HTMLSelectElement;
+      if (input && select && input.value.trim().length > 0) {
+        saveBtn.textContent = 'Saving...';
+        chrome.storage.sync.set({
+          explainx_api_key: input.value.trim(),
+          explainx_provider: select.value
+        }, () => {
+          saveBtn.textContent = 'Connected! ✅';
+          setTimeout(() => {
+            showChatSidebar(); // Reload sidebar
+          }, 600);
+        });
+      } else {
+        alert('Please enter a valid API key.');
+      }
+    };
+  }
+
   document.getElementById('export-chat-btn')?.addEventListener('click', exportConversation);
 
   document.getElementById('explainx-close-btn')?.addEventListener('click', () => {
@@ -786,10 +820,4 @@ const observer = new MutationObserver(() => {
     getOrCreateToggle();
   }
 });
-if (document.body) {
-  observer.observe(document.body, { childList: true, subtree: true });
-} else {
-  document.addEventListener('DOMContentLoaded', () => {
-    observer.observe(document.body, { childList: true, subtree: true });
-  });
-}
+observer.observe(document.documentElement, { childList: true, subtree: true });

@@ -4,16 +4,16 @@ import { Mode } from './storage';
 
 const API_ENDPOINTS: Record<string, string> = {
   openai: 'https://api.openai.com/v1/chat/completions',
-  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
   anthropic: 'https://api.anthropic.com/v1/messages',
   groq: 'https://api.groq.com/openai/v1/chat/completions',
 };
 
 const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-1.5-flash-latest',
+  gemini: 'gemini-1.5-flash',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.1-8b-instant',
+  groq: 'llama3-8b-8192',
 };
 
 const DEFAULT_GROQ_KEY = 'gsk_' + 'UbTrBbjHdiFVsjSoDqx1WGdyb3FY5aU6439CWCmwYd3OUbg9gHXG';
