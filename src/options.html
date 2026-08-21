@@ -43,19 +43,18 @@
 
         <section class="settings-section">
           <h3>AI Engine</h3>
-            <div class="form-group">
-                <label for="provider">AI Provider</label>
-                <select id="provider">
-                    <option value="groq">Groq (Requires API Key)</option>
-                    <option value="gemini">Google Gemini (Requires API Key)</option>
-                </select>
-            </div>
+          <div class="form-group">
+            <label for="provider">AI Provider</label>
+            <select id="provider">
+              <option value="groq">Groq (Requires API Key)</option>
+              <option value="gemini">Google Gemini (Requires API Key)</option>
+            </select>
           </div>
           
-          <div class="settings-group" style="margin-top: 16px;">
+          <div class="form-group">
             <label for="apiKey">API Key</label>
-            <input type="password" id="apiKey" class="form-input" placeholder="Paste your API key here..." style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); margin-top: 8px;">
-            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Get a free Gemini API key at <a href="https://aistudio.google.com/" target="_blank" style="color: #667eea;">aistudio.google.com</a></p>
+            <input type="password" id="apiKey" placeholder="Paste your API key here...">
+            <span class="hint">Get a free Gemini API key at <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent-color);">aistudio.google.com</a></span>
           </div>
         </section>
 
