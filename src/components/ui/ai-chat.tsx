@@ -21,7 +21,7 @@ import {
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
-// Custom code block renderer with dedicated Copy Code header
+// Custom code block renderer - uses inline styles to avoid Tailwind purge of dynamic HTML
 marked.use({
   renderer: {
     code(token: any) {
@@ -33,14 +33,14 @@ marked.use({
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
 
-      return `<div class="explainx-code-container my-3 rounded-xl overflow-hidden border border-white/20 bg-zinc-950 shadow-md">
-  <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-white/10 text-[11px] text-zinc-400 font-mono">
-    <span class="font-semibold text-blue-400 uppercase tracking-wider text-[10px]">${lang}</span>
-    <button type="button" class="explainx-copy-code-btn px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-200 hover:text-white transition-all flex items-center gap-1 cursor-pointer select-none text-[10px] font-sans" data-code="${encodedCode}">
+      return `<div style="margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);background:#09090b;box-shadow:0 2px 10px rgba(0,0,0,0.4);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#18181b;border-bottom:1px solid rgba(255,255,255,0.1);">
+    <span style="font-family:monospace;font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:0.08em;">${lang}</span>
+    <button type="button" class="explainx-copy-code-btn" data-code="${encodedCode}" style="padding:3px 10px;border-radius:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#d4d4d8;font-size:10px;font-family:sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background 0.2s;">
       <span class="btn-text">📋 Copy Code</span>
     </button>
   </div>
-  <pre class="p-3.5 overflow-x-auto text-[12px] font-mono leading-relaxed text-zinc-200 m-0 bg-black/80"><code>${escaped}</code></pre>
+  <pre style="padding:14px;overflow-x:auto;font-size:12px;font-family:monospace;line-height:1.6;color:#e4e4e7;margin:0;background:rgba(0,0,0,0.6);"><code>${escaped}</code></pre>
 </div>`;
     }
   }
