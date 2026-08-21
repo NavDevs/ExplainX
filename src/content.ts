@@ -115,41 +115,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'CHAT_RESPONSE') {
     removeLoadingFromChat();
+    
+    // The final message object sent from background.ts
+    const fullMsg = request.message;
+    
     if (currentStreamingDiv) {
-      // Final render
-      currentStreamingDiv.innerHTML = marked.parse(request.text) as string;
+      // Final render to existing bubble
+      currentStreamingDiv.innerHTML = marked.parse(fullMsg.content) as string;
       
       // Add copy button
-      const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(request.text)}">
+      const copyBtn = `<button class="message-action-btn copy-btn" title="Copy response" data-content="${escapeHtml(fullMsg.content)}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </button>`;
+      
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'message-actions';
       actionsDiv.innerHTML = copyBtn;
       currentStreamingDiv.parentElement?.appendChild(actionsDiv);
       
-      const fullMsg = {
-        id: generateId(),
-        role: 'assistant',
-        content: request.text,
-        timestamp: Date.now()
-      };
+      // Save it to history without appending a new DOM bubble (since we already streamed it)
+      chatMessages.push(fullMsg);
+      saveChatMessage(fullMsg);
       
       currentStreamingDiv = null;
       enhanceCodeBlocks();
       scrollToBottom(true);
-      
-      // Save it to memory
-      chatMessages.push(fullMsg as any);
-      saveChatMessage(fullMsg as any);
     } else {
-      const fullMsg = {
-        id: generateId(),
-        role: 'assistant',
-        content: request.text,
-        timestamp: Date.now()
-      };
-      appendChatMessage(fullMsg as any, true, false);
+      // If streaming skipped or failed, create the bubble from scratch
+      appendChatMessage(fullMsg, true, false);
     }
     return false;
   }
