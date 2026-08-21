@@ -4,14 +4,14 @@ import { Mode } from './storage';
 
 const API_ENDPOINTS: Record<string, string> = {
   openai: 'https://api.openai.com/v1/chat/completions',
-  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
   anthropic: 'https://api.anthropic.com/v1/messages',
   groq: 'https://api.groq.com/openai/v1/chat/completions',
 };
 
 const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-flash-latest',
+  gemini: 'gemini-1.5-flash',
   anthropic: 'claude-3-5-sonnet-20241022',
   groq: 'llama-3.1-8b-instant',
 };
@@ -76,8 +76,8 @@ async function fetchWithRetry(
     try {
       const res = await fetch(url, options);
       
-      // If rate limited (429), wait and retry
-      if (res.status === 429) {
+      // If rate limited (429) or overloaded (503, 500), wait and retry
+      if (res.status === 429 || res.status === 503 || res.status === 500) {
         const retryAfter = res.headers.get('Retry-After');
         const delay = retryAfter ? parseInt(retryAfter) * 1000 : baseDelay * Math.pow(2, attempt);
         await new Promise(r => setTimeout(r, delay));
