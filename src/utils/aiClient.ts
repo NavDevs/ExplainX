@@ -512,7 +512,19 @@ async function callGroqChat(
     }),
   });
 
-  if (!res.ok) throw new Error('Groq API Error: ' + res.statusText);
+  if (!res.ok) {
+    let errorDetail = '';
+    try {
+      const errData = await res.json();
+      errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
+    } catch (e) {
+      errorDetail = res.statusText || `HTTP ${res.status}`;
+    }
+    if (res.status === 401 || errorDetail.toLowerCase().includes('api key') || errorDetail.toLowerCase().includes('invalid')) {
+      throw new Error('Invalid API key for Groq. Please check or re-enter your API key in settings.');
+    }
+    throw new Error(`Groq API Error (${res.status}): ${errorDetail}`);
+  }
 
   return await processOpenAIStream(res, onUpdate);
 }
@@ -593,7 +605,19 @@ async function callGeminiChat(
     }),
   });
 
-  if (!res.ok) throw new Error('Gemini API Error: ' + res.statusText);
+  if (!res.ok) {
+    let errorDetail = '';
+    try {
+      const errData = await res.json();
+      errorDetail = errData.error?.message || errData.message || (typeof errData.error === 'string' ? errData.error : JSON.stringify(errData));
+    } catch (e) {
+      errorDetail = res.statusText || `HTTP ${res.status}`;
+    }
+    if (res.status === 400 && (errorDetail.toLowerCase().includes('api_key_invalid') || errorDetail.toLowerCase().includes('api key')) || res.status === 403 || res.status === 401) {
+      throw new Error('Invalid API key for Google Gemini. Please check or re-enter your API key in settings.');
+    }
+    throw new Error(`Gemini API Error (${res.status}): ${errorDetail}`);
+  }
   return await processGeminiStream(res, onUpdate);
 }
 
