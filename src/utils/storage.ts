@@ -32,7 +32,7 @@ export async function getStoredSettings(): Promise<StoredSettings> {
       (result) => {
         resolve({
           apiKey: (result.explainx_api_key as string) || '',
-          provider: (result.explainx_provider as Provider) || 'openai',
+          provider: (result.explainx_provider as Provider) || 'gemini',
           defaultMode: (result.explainx_default_mode as Mode) || 'simple',
           theme: (result.explainx_theme as 'light'|'dark') || 'light',
         });

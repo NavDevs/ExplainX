@@ -128,8 +128,7 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
   const finalApiKey = settings.apiKey;
   const finalProvider = settings.provider;
 
-  // API key must be provided by user in extension settings (unless pollinations)
-  if (finalProvider !== 'pollinations' && (!finalApiKey || finalApiKey.trim().length === 0)) {
+  if (!finalApiKey || finalApiKey.trim().length === 0) {
     throw new Error('API key is required. Please click the ExplainX extension icon and open Settings to add your API key for ' + finalProvider + '.');
   }
 
@@ -140,16 +139,10 @@ export async function callAI(text: string, mode: Mode): Promise<string> {
   try {
      // Use request queue to prevent rate limiting
      return await requestQueue.add(async () => {
-       if (finalProvider === 'pollinations') {
-         return await callPollinations(prompt, controller.signal);
-       } else if (finalProvider === 'anthropic') {
-         return await callAnthropic(prompt, finalApiKey, controller.signal);
-       } else if (finalProvider === 'gemini') {
+       if (finalProvider === 'gemini') {
          return await callGemini(prompt, finalApiKey, controller.signal);
-       } else if (finalProvider === 'groq') {
-         return await callGroq(prompt, finalApiKey, controller.signal);
        } else {
-         return await callOpenAI(prompt, finalApiKey, controller.signal);
+         return await callGroq(prompt, finalApiKey, controller.signal);
        }
      });
   } catch (err: any) {
