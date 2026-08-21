@@ -13,15 +13,68 @@ const MODELS: Record<string, string> = {
   openai: 'gpt-4o-mini',
   gemini: 'gemini-2.0-flash',
   anthropic: 'claude-3-5-sonnet-20241022',
-  groq: 'llama-3.3-70b-versatile',
+  groq: 'openai/gpt-oss-120b',
 };
 
+let cachedGroqModels: string[] = [];
+let lastGroqModelFetch = 0;
+
+async function getAvailableGroqModels(apiKey: string): Promise<string[]> {
+  const now = Date.now();
+  if (cachedGroqModels.length > 0 && now - lastGroqModelFetch < 300000) {
+    return cachedGroqModels;
+  }
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data && Array.isArray(data.data)) {
+        const chatModels = data.data
+          .map((m: any) => m.id)
+          .filter((id: string) => 
+            !id.includes('whisper') && 
+            !id.includes('guard') && 
+            !id.includes('embed') &&
+            !id.includes('tts') &&
+            !id.includes('stt')
+          );
+        
+        if (chatModels.length > 0) {
+          cachedGroqModels = chatModels;
+          lastGroqModelFetch = now;
+          return cachedGroqModels;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not query Groq models dynamically:', e);
+  }
+
+  return [
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'meta-llama/llama-4-scout-17b-16e-instruct',
+    'meta-llama/llama-4-maverick-17b-128e-instruct',
+    'qwen/qwen3.6-27b',
+    'llama-3.3-70b-versatile',
+    'gemma2-9b-it',
+  ];
+}
+
 const GROQ_FALLBACK_MODELS = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'qwen/qwen3.6-27b',
   'llama-3.3-70b-versatile',
-  'llama3-70b-8192',
-  'llama3-8b-8192',
   'gemma2-9b-it',
-  'mixtral-8x7b-32768',
 ];
 
 const GEMINI_FALLBACK_MODELS = [
@@ -256,7 +309,8 @@ async function callPollinations(prompt: string, signal: AbortSignal): Promise<st
 
 async function callGroq(prompt: string, apiKey: string, signal: AbortSignal): Promise<string> {
   let lastErr: any = null;
-  for (const modelName of GROQ_FALLBACK_MODELS) {
+  const availableModels = await getAvailableGroqModels(apiKey);
+  for (const modelName of availableModels) {
     try {
       const res = await fetchWithRetry(API_ENDPOINTS['groq'], {
         method: 'POST',
@@ -520,8 +574,9 @@ async function callGroqChat(
   }));
 
   let lastErrorDetail = '';
+  const availableModels = await getAvailableGroqModels(apiKey);
 
-  for (const modelName of GROQ_FALLBACK_MODELS) {
+  for (const modelName of availableModels) {
     try {
       const res = await fetch(API_ENDPOINTS['groq'], {
         method: 'POST',

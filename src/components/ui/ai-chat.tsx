@@ -21,6 +21,28 @@ import {
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
+// Custom code block renderer with dedicated Copy Code button
+const renderer = new marked.Renderer();
+renderer.code = function({ text, lang }: { text: string; lang?: string }) {
+  const language = lang || "code";
+  const encodedCode = encodeURIComponent(text);
+  const escapedText = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  
+  return `<div class="explainx-code-card my-2.5 rounded-xl overflow-hidden border border-white/15 bg-zinc-950/90 shadow-md">
+    <div class="flex items-center justify-between px-3 py-1.5 bg-white/5 border-b border-white/10 text-[11px] text-zinc-400 font-mono">
+      <span class="font-semibold text-zinc-300 uppercase tracking-wider text-[10px]">${language}</span>
+      <button type="button" class="explainx-copy-code-btn px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer select-none text-[10px]" data-code="${encodedCode}">
+        <span class="btn-text">Copy Code</span>
+      </button>
+    </div>
+    <pre class="p-3 overflow-x-auto text-[11px] font-mono leading-relaxed text-zinc-200 m-0"><code>${escapedText}</code></pre>
+  </div>`;
+};
+marked.use({ renderer });
+
 interface ChatMsg {
   id: string;
   role: "user" | "assistant";
@@ -140,7 +162,6 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
   const handleScroll = () => {
     if (!chatScrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = chatScrollRef.current;
-    // If within 70px of the bottom, keep auto-scroll on; if user scrolled up, disable auto-scroll
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 70;
     isAutoScrollEnabled.current = isNearBottom;
     setShowScrollDownBtn(!isNearBottom);
@@ -284,6 +305,26 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Click delegation for "Copy Code" buttons inside markdown code blocks
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest(".explainx-copy-code-btn") as HTMLElement;
+    if (btn) {
+      e.stopPropagation();
+      const codeToCopy = decodeURIComponent(btn.getAttribute("data-code") || "");
+      navigator.clipboard.writeText(codeToCopy);
+      const textSpan = btn.querySelector(".btn-text");
+      if (textSpan) {
+        textSpan.textContent = "✓ Copied!";
+        btn.classList.add("text-green-400", "bg-green-500/20");
+        setTimeout(() => {
+          textSpan.textContent = "Copy Code";
+          btn.classList.remove("text-green-400", "bg-green-500/20");
+        }, 2000);
+      }
+    }
+  };
+
   const renderMarkdown = (content: string) => {
     try {
       return { __html: marked.parse(content) as string };
@@ -308,7 +349,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               </span>
             </div>
             <span className="text-[10px] text-white/50 font-mono">
-              {provider === "groq" ? "Groq (Ultra-Fast)" : "Gemini (Vision)"}
+              {provider === "groq" ? "Groq (Fast)" : "Gemini (Vision)"}
             </span>
           </div>
         </div>
@@ -463,6 +504,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       <div 
         ref={chatScrollRef}
         onScroll={handleScroll}
+        onClick={handleContainerClick}
         className="flex-1 min-h-0 px-4 py-3 overflow-y-auto space-y-4 text-sm flex flex-col relative z-10 scroll-smooth"
       >
         {messages.length === 0 && !setupMode && (
@@ -525,7 +567,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               <div className="whitespace-pre-wrap break-words">{msg.content}</div>
             )}
 
-            {/* Assistant Message Actions (Copy Button) */}
+            {/* Assistant Message Actions (Copy Full Response) */}
             {msg.role === "assistant" && !msg.isError && (
               <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-opacity">
                 <span className="text-[10px] text-zinc-400 font-mono">
@@ -534,7 +576,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
                 <button
                   onClick={() => handleCopyMessage(msg.id, msg.content)}
                   className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-all flex items-center gap-1 text-[10px]"
-                  title="Copy message"
+                  title="Copy full message"
                 >
                   {copiedId === msg.id ? (
                     <>
@@ -544,7 +586,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
                   ) : (
                     <>
                       <Copy className="w-3 h-3" />
-                      <span>Copy</span>
+                      <span>Copy All</span>
                     </>
                   )}
                 </button>
