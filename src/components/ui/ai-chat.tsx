@@ -602,26 +602,11 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               "group relative max-w-[88%] rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-md",
               msg.role === "assistant"
                 ? msg.isError
-                  ? "bg-red-950/70 border border-red-500/40 text-red-200 self-start pr-9"
-                  : "bg-zinc-900/90 border border-white/10 text-zinc-100 self-start pr-9"
+                  ? "bg-red-950/70 border border-red-500/40 text-red-200 self-start"
+                  : "bg-zinc-900/90 border border-white/10 text-zinc-100 self-start"
                 : "bg-blue-600 text-white font-medium self-end shadow-blue-900/30"
             )}
           >
-            {/* Message Actions - Floating Top Right */}
-            {msg.role === "assistant" && !msg.isError && (
-              <button
-                onClick={() => handleCopyMessage(msg.id, msg.content)}
-                className="absolute top-2 right-2 p-1.5 rounded bg-black/40 hover:bg-black/80 text-white/50 hover:text-white transition-all opacity-0 group-hover:opacity-100 border border-white/10 z-10"
-                title="Copy full message"
-              >
-                {copiedId === msg.id ? (
-                  <Check className="w-3.5 h-3.5 text-green-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-
             {/* Uploaded Image Preview */}
             {msg.imageUrl && (
               <img
@@ -641,12 +626,29 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               <div className="whitespace-pre-wrap break-words">{msg.content}</div>
             )}
 
-            {/* Timestamp at bottom */}
+            {/* Timestamp and Actions at bottom */}
             {msg.role === "assistant" && !msg.isError && (
-              <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
+              <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-opacity">
                 <span className="text-[10px] text-zinc-400 font-mono">
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
+                <button
+                  onClick={() => handleCopyMessage(msg.id, msg.content)}
+                  className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-all flex items-center gap-1 text-[10px]"
+                  title="Copy full message"
+                >
+                  {copiedId === msg.id ? (
+                    <>
+                      <Check className="w-3 h-3 text-green-400" />
+                      <span className="text-green-400 font-medium">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy All</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
