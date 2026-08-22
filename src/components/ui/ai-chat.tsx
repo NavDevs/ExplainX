@@ -21,6 +21,8 @@ import {
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
+import hljs from 'highlight.js';
+
 // Custom code block renderer - uses inline styles to avoid Tailwind purge of dynamic HTML
 marked.use({
   renderer: {
@@ -28,10 +30,17 @@ marked.use({
       const text = (typeof token === "object" && token.text !== undefined ? token.text : token) || "";
       const lang = ((typeof token === "object" && token.lang) || "code").toLowerCase();
       const encodedCode = encodeURIComponent(text);
-      const escaped = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      let highlighted = text;
+      try {
+        highlighted = hljs.highlight(text, { language }).value;
+      } catch (e) {
+        highlighted = text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
 
       return `<div style="margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);background:#09090b;box-shadow:0 2px 10px rgba(0,0,0,0.4);">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#18181b;border-bottom:1px solid rgba(255,255,255,0.1);">
@@ -40,7 +49,7 @@ marked.use({
       <span class="btn-text">📋 Copy Code</span>
     </button>
   </div>
-  <pre style="padding:14px;overflow-x:auto;font-size:12px;font-family:monospace;line-height:1.6;color:#e4e4e7;margin:0;background:rgba(0,0,0,0.6);"><code>${escaped}</code></pre>
+  <pre class="hljs" style="padding:14px;overflow-x:auto;font-size:12px;font-family:monospace;line-height:1.6;color:#e4e4e7;margin:0;background:rgba(0,0,0,0.6);"><code>${highlighted}</code></pre>
 </div>`;
     }
   }
