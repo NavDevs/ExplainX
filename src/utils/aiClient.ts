@@ -739,14 +739,11 @@ async function callGeminiChat(
   maxTokens: number,
   onUpdate?: (text: string) => void
 ): Promise<string> {
-  const geminiMessages = messages.map(msg => {
-    if (msg.role === 'system') {
-      return { role: 'user', content: typeof msg.content === 'string' ? `System: ${msg.content}` : msg.content };
-    }
-    return msg;
-  });
+  // Extract system messages to use Gemini's native systemInstruction
+  const systemMessage = messages.find(msg => msg.role === 'system');
+  const conversationMessages = messages.filter(msg => msg.role !== 'system');
 
-  const contents = geminiMessages.map(msg => {
+  const contents = conversationMessages.map(msg => {
     if (Array.isArray(msg.content)) {
       const parts: any[] = [];
       for (const part of msg.content) {
@@ -760,9 +757,9 @@ async function callGeminiChat(
           }
         }
       }
-      return { parts };
+      return { role: msg.role === 'assistant' ? 'model' : 'user', parts };
     }
-    return { parts: [{ text: msg.content as string }] };
+    return { role: msg.role === 'assistant' ? 'model' : 'user', parts: [{ text: msg.content as string }] };
   });
 
   let lastErrorDetail = '';
@@ -772,14 +769,22 @@ async function callGeminiChat(
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
 
+      const payload: any = {
+        contents,
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+      };
+
+      if (systemMessage && typeof systemMessage.content === 'string') {
+        payload.systemInstruction = {
+          parts: [{ text: systemMessage.content }]
+        };
+      }
+
       const res = await fetch(url, {
         method: 'POST',
         signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
