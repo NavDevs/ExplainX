@@ -208,7 +208,13 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
 
   // Aggressive Auto-scroll down when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+    scrollToBottom();
+    // Delays to handle initial load where images/DOM might still be painting
+    setTimeout(scrollToBottom, 150);
+    setTimeout(scrollToBottom, 500);
   }, [messages, streamText]);
 
   // Track User Scroll Position to allow free scrolling up during generation
