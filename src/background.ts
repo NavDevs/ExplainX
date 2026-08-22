@@ -126,10 +126,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     ];
     
     callAIChat(aiMessages, 1000, imageUrl, (partialText) => {
-      chrome.tabs.sendMessage(tabId, {
-        type: 'CHAT_CHUNK',
-        text: partialText
-      }).catch(() => {});
+      // Typing animation (streaming) disabled per user request
+      // chrome.tabs.sendMessage(tabId, {
+      //   type: 'CHAT_CHUNK',
+      //   text: partialText
+      // }).catch(() => {});
     })
       .then((response) => {
         const assistantMsg = {

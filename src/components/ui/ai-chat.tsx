@@ -206,11 +206,9 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     return () => chrome.runtime.onMessage.removeListener(listener);
   }, []);
 
-  // Smart Auto-scroll: Only scrolls if the user hasn't scrolled up to read history
+  // Aggressive Auto-scroll down when new messages arrive
   useEffect(() => {
-    if (isAutoScrollEnabled.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamText]);
 
   // Track User Scroll Position to allow free scrolling up during generation
