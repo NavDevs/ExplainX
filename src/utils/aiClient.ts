@@ -1,12 +1,16 @@
-import { getStoredSettings } from './storage';
+﻿import { getStoredSettings } from './storage';
 import { buildPrompt } from './promptTemplates';
 import { Mode } from './storage';
 
 
 function formatThinkingBlocks(text: string): string {
   if (!text) return text;
-  let result = text.replace(/<think>/g, '<details class="explainx-thought-process" style="margin: 8px 0; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(0,0,0,0.3);"><summary style="cursor: pointer; font-size: 11px; font-weight: 600; color: #a1a1aa; user-select: none; outline: none; margin-bottom: 8px; list-style-type: none; display: flex; align-items: center; gap: 6px;">🤔 Thought Process</summary><div style="font-size: 11px; color: #9ca3af; border-left: 2px solid rgba(255,255,255,0.1); padding-left: 10px; opacity: 0.9;">\n\n');
-  result = result.replace(/<\/think>/g, '\n\n</div></details>\n\n');
+  const OPEN = '<details class="explainx-thought-process" style="margin: 8px 0; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(0,0,0,0.3);"><summary style="cursor: pointer; font-size: 11px; font-weight: 600; color: #a1a1aa; user-select: none; outline: none; margin-bottom: 8px; list-style-type: none; display: flex; align-items: center; gap: 6px;">🤔 Thought Process</summary><div style="font-size: 11px; color: #9ca3af; border-left: 2px solid rgba(255,255,255,0.1); padding-left: 10px; opacity: 0.9;">\n\n';
+  const CLOSE = '\n\n</div></details>\n\n';
+  let result = text;
+  // Handle <think> and <thinking> (Claude, DeepSeek etc.)
+  result = result.replace(/<think>/g, OPEN).replace(/<thinking>/g, OPEN);
+  result = result.replace(/<\/think>/g, CLOSE).replace(/<\/thinking>/g, CLOSE);
   return result;
 }
 
@@ -437,7 +441,12 @@ async function callAnthropic(prompt: string, apiKey: string, signal: AbortSignal
     throw new Error('Anthropic Claude returned an empty response.');
   }
 
-  return formatThinkingBlocks(data.content[0].text);
+  // Claude Thinking models return separate thinking+text content blocks.
+  // We ONLY want text blocks - ignore the thinking block.
+  const textBlocks = (data.content as any[]).filter((b: any) => b.type === 'text');
+  if (textBlocks.length === 0) throw new Error('Anthropic Claude returned no text content.');
+  const finalText = textBlocks.map((b: any) => b.text).join('\n\n');
+  return formatThinkingBlocks(finalText);
 }
 
 // -----------------------------------------------------------------------------
@@ -875,3 +884,4 @@ async function callAnthropicChat(
 
   return formatThinkingBlocks(data.content[0].text);
 }
+
