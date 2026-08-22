@@ -60,6 +60,34 @@ interface AIChatProps {
   onClose?: () => void;
 }
 
+/**
+ * Resize a base64 image to a small thumbnail for storage.
+ * Max 100px wide/tall, JPEG quality 0.4 → typically under 3KB per image.
+ */
+function resizeImageForStorage(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 100;
+      let w = img.width, h = img.height;
+      if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.4));
+      } else {
+        resolve("[image]");
+      }
+    };
+    img.onerror = () => resolve("[image]");
+    img.src = dataUrl;
+  });
+}
+
 export default function AIChatCard({ className, onClose }: AIChatProps) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
@@ -80,6 +108,21 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isAutoScrollEnabled = useRef<boolean>(true);
+
+  // Persist messages to storage with thumbnail-resized images
+  const persistMessages = async (msgs: ChatMsg[]) => {
+    const trimmed = msgs.slice(-200);
+    const stored = await Promise.all(
+      trimmed.map(async (m) => {
+        if (m.imageUrl && m.imageUrl.startsWith("data:")) {
+          const thumb = await resizeImageForStorage(m.imageUrl);
+          return { ...m, imageUrl: thumb };
+        }
+        return m;
+      })
+    );
+    chrome.storage.local.set({ explainx_chat_messages: stored });
+  };
 
   // Auto-resize textarea when input changes
   useEffect(() => {
@@ -117,8 +160,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
         const msg = request.message;
         setMessages((prev) => {
           const updated = [...prev, msg];
-          const toStore = updated.slice(-200).map(m => ({ ...m, imageUrl: m.imageUrl ? "[image]" : undefined }));
-          chrome.storage.local.set({ explainx_chat_messages: toStore });
+          persistMessages(updated);
           return updated;
         });
         setStreamText("");
@@ -144,8 +186,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
             isError: true,
           };
           const updated = [...prev, errMsg];
-          const toStore = updated.slice(-200).map(m => ({ ...m, imageUrl: m.imageUrl ? "[image]" : undefined }));
-          chrome.storage.local.set({ explainx_chat_messages: toStore });
+          persistMessages(updated);
           return updated;
         });
         setStreamText("");
@@ -220,13 +261,7 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
 
     const updated = [...messages, userMsg];
     setMessages(updated);
-    // Strip base64 image data before saving — images are huge and quickly fill the 5MB quota.
-    // We store a placeholder so the chat history loads correctly (image won't re-display, but that's OK).
-    const toStore = updated.slice(-200).map(m => ({
-      ...m,
-      imageUrl: m.imageUrl ? "[image]" : undefined,
-    }));
-    chrome.storage.local.set({ explainx_chat_messages: toStore });
+    persistMessages(updated);
     
     const sentImage = pendingImage;
     setInput("");
@@ -327,10 +362,14 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
       const textSpan = btn.querySelector(".btn-text");
       if (textSpan) {
         textSpan.textContent = "✓ Copied!";
-        btn.classList.add("text-green-400", "bg-green-500/30", "border-green-500/50");
+        btn.style.color = "#4ade80";
+        btn.style.background = "rgba(74,222,128,0.15)";
+        btn.style.borderColor = "rgba(74,222,128,0.4)";
         setTimeout(() => {
           textSpan.textContent = "📋 Copy Code";
-          btn.classList.remove("text-green-400", "bg-green-500/30", "border-green-500/50");
+          btn.style.color = "#d4d4d8";
+          btn.style.background = "rgba(255,255,255,0.08)";
+          btn.style.borderColor = "rgba(255,255,255,0.12)";
         }, 2000);
       }
     }
