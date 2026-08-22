@@ -68,6 +68,50 @@ async function getAvailableGroqModels(apiKey: string): Promise<string[]> {
   ];
 }
 
+let cachedGeminiModels: string[] = [];
+let lastGeminiModelFetch = 0;
+
+async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
+  const now = Date.now();
+  if (cachedGeminiModels.length > 0 && now - lastGeminiModelFetch < 300000) {
+    return cachedGeminiModels;
+  }
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.models && Array.isArray(data.models)) {
+        const chatModels = data.models
+          .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+          .map((m: any) => m.name.replace('models/', ''));
+          
+        if (chatModels.length > 0) {
+          chatModels.sort((a: string, b: string) => {
+            const score = (m: string) => {
+              if (m.includes('2.0-flash')) return 10;
+              if (m.includes('1.5-flash-8b')) return 9;
+              if (m.includes('1.5-flash')) return 8;
+              if (m.includes('2.5')) return 7;
+              if (m.includes('1.5-pro')) return 6;
+              if (m.includes('pro')) return 5;
+              return 0;
+            };
+            return score(b) - score(a);
+          });
+          cachedGeminiModels = chatModels;
+          lastGeminiModelFetch = now;
+          return cachedGeminiModels;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not query Gemini models dynamically:', e);
+  }
+
+  return [...GEMINI_FALLBACK_MODELS, 'gemini-1.0-pro', 'gemini-pro'];
+}
+
 const GROQ_FALLBACK_MODELS = [
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
@@ -245,48 +289,70 @@ async function callOpenAI(prompt: string, apiKey: string, signal: AbortSignal): 
 }
 
 async function callGemini(prompt: string, apiKey: string, signal: AbortSignal): Promise<string> {
-  const url = `${API_ENDPOINTS['gemini']}?key=${encodeURIComponent(apiKey)}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    signal,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 800, temperature: 0.3 },
-    }),
-  });
-
-  if (res.status === 400 || res.status === 403) throw new Error('Invalid Gemini API key. Please check your ExplainX Settings.');
-  if (res.status === 429) throw new Error('Too many requests. Please wait a moment.');
-  if (!res.ok) {
-    let errorMsg = res.statusText || 'Unknown Error';
-    try {
-      const errorJson = await res.json();
-      if (errorJson.error && errorJson.error.message) {
-        errorMsg = errorJson.error.message;
-      }
-    } catch (_) {}
-    throw new Error(`Gemini API Error: ${res.status} - ${errorMsg}`);
-  }
-
-  const data = await res.json();
+  const modelsToTry = await getAvailableGeminiModels(apiKey);
+  let lastErrorMsg = 'Unknown Error';
   
-  if (!data.candidates || data.candidates.length === 0) {
-    if (data.promptFeedback && data.promptFeedback.blockReason) {
-      throw new Error(`Google Safety Filter Blocked this request: ${data.promptFeedback.blockReason}`);
+  for (const modelName of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 800, temperature: 0.3 },
+        }),
+      });
+
+      if (res.status === 400 && res.statusText.includes('API key') || res.status === 403 || res.status === 401) {
+        throw new Error('Invalid Gemini API key. Please check your ExplainX Settings.');
+      }
+      
+      if (res.status === 503 || res.status === 429 || res.status === 404) {
+         continue; // try next model
+      }
+
+      if (!res.ok) {
+        let errorMsg = res.statusText || 'Unknown Error';
+        try {
+          const errorJson = await res.json();
+          if (errorJson.error && errorJson.error.message) {
+            errorMsg = errorJson.error.message;
+            if (errorMsg.includes('not found') || errorMsg.toLowerCase().includes('demand')) {
+               lastErrorMsg = errorMsg;
+               continue; // try next model
+            }
+          }
+        } catch (_) {}
+        throw new Error(`Gemini API Error: ${res.status} - ${errorMsg}`);
+      }
+
+      const data = await res.json();
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        if (data.promptFeedback && data.promptFeedback.blockReason) {
+          throw new Error(`Google Safety Filter Blocked this request: ${data.promptFeedback.blockReason}`);
+        }
+        throw new Error('Google Gemini returned an empty response. Try a different snippet.');
+      }
+
+      const content = data.candidates[0].content;
+      if (!content || !content.parts || content.parts.length === 0) {
+         if (data.candidates[0].finishReason === 'SAFETY') {
+           throw new Error('Google Safety Filter Blocked this request (Political/Explicit content).');
+         }
+         throw new Error('Google Gemini returned an empty explanation.');
+      }
+
+      return content.parts[0].text;
+    } catch (err: any) {
+      if (err.message.includes('Invalid Gemini API key')) throw err;
+      if (modelName === modelsToTry[modelsToTry.length - 1]) throw err;
     }
-    throw new Error('Google Gemini returned an empty response. Try a different snippet.');
   }
-
-  const content = data.candidates[0].content;
-  if (!content || !content.parts || content.parts.length === 0) {
-     if (data.candidates[0].finishReason === 'SAFETY') {
-       throw new Error('Google Safety Filter Blocked this request (Political/Explicit content).');
-     }
-     throw new Error('Google Gemini returned an empty explanation.');
-  }
-
-  return content.parts[0].text;
+  
+  throw new Error(`Gemini API Error: ${lastErrorMsg}`);
 }
 
 async function callPollinations(prompt: string, signal: AbortSignal): Promise<string> {
@@ -692,8 +758,9 @@ async function callGeminiChat(
   });
 
   let lastErrorDetail = '';
+  const modelsToTry = await getAvailableGeminiModels(apiKey);
 
-  for (const modelName of GEMINI_FALLBACK_MODELS) {
+  for (const modelName of modelsToTry) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
 
@@ -733,7 +800,7 @@ async function callGeminiChat(
       throw new Error(`Gemini API Error (${res.status}): ${errorDetail}`);
     } catch (err: any) {
       if (err.message.includes('Invalid API key')) throw err;
-      if (modelName === GEMINI_FALLBACK_MODELS[GEMINI_FALLBACK_MODELS.length - 1]) {
+      if (modelName === modelsToTry[modelsToTry.length - 1]) {
         throw err;
       }
     }
