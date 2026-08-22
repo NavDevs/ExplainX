@@ -384,9 +384,65 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
     }
   };
 
+  const stripMetaCommentary = (content: string): string => {
+    if (!content) return content;
+
+    // Pattern 1: If there's a "Draft:" section, take everything AFTER the last quoted draft block
+    // Draft blocks look like: Draft:\n"Hello! ... answer ..."<actual answer>
+    const draftIdx = content.lastIndexOf('Draft:');
+    if (draftIdx !== -1) {
+      // Find the real answer after the draft quote — it's usually after a closing quote + newlines
+      const afterDraft = content.slice(draftIdx);
+      // Try to find content after the quoted draft (ends with closing quote)
+      const quoteEnd = afterDraft.search(/["\u201d]\s*\n+[A-Z#*\-]/);
+      if (quoteEnd !== -1) {
+        return content.slice(draftIdx + quoteEnd).replace(/^["\u201d]\s*\n+/, '').trim();
+      }
+    }
+
+    // Pattern 2: Strip leading meta-commentary lines before the actual response.
+    // These start with phrases like "The user said", "User said", "Intent:", "Persona:",
+    // "Constraint", "User's intent", followed by bullet points.
+    const metaPatterns = [
+      /^The user (said|is|has|wants)/im,
+      /^User('s)? (said|intent|input)/im,
+      /^Intent:/im,
+      /^Persona:/im,
+      /^Constraint/im,
+      /^System Prompt:/im,
+      /^Goal:/im,
+    ];
+    const lines = content.split('\n');
+    let firstRealLine = 0;
+    let inMetaSection = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line === '') continue;
+      const isMeta = metaPatterns.some(p => p.test(line)) || 
+                     (i < 6 && (line.startsWith('*') || line.startsWith('-')) && /intent|persona|constraint|user|goal/i.test(content.slice(0, 300)));
+      if (isMeta) { inMetaSection = true; firstRealLine = i + 1; continue; }
+      if (inMetaSection) {
+        // Skip bullet points that are part of the planning section
+        if (line.startsWith('*') || line.startsWith('-') || line.startsWith('•')) {
+          firstRealLine = i + 1; continue;
+        }
+        // This line looks like real content - stop stripping
+        firstRealLine = i;
+        break;
+      } else {
+        firstRealLine = 0;
+        break;
+      }
+    }
+    if (firstRealLine > 0 && firstRealLine < lines.length) {
+      return lines.slice(firstRealLine).join('\n').trim();
+    }
+    return content;
+  };
+
   const renderMarkdown = (content: string) => {
     try {
-      return { __html: marked.parse(content) as string };
+      return { __html: marked.parse(stripMetaCommentary(content)) as string };
     } catch {
       return { __html: content };
     }
