@@ -602,8 +602,8 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
               "group relative max-w-[88%] rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-md",
               msg.role === "assistant"
                 ? msg.isError
-                  ? "bg-red-950/70 border border-red-500/40 text-red-200 self-start"
-                  : "bg-zinc-900/90 border border-white/10 text-zinc-100 self-start"
+                  ? "bg-red-950/70 border border-red-500/40 text-red-200 self-start pr-9"
+                  : "bg-zinc-900/90 border border-white/10 text-zinc-100 self-start pr-9"
                 : "bg-blue-600 text-white font-medium self-end shadow-blue-900/30"
             )}
           >
