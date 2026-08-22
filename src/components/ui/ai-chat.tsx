@@ -117,7 +117,8 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
         const msg = request.message;
         setMessages((prev) => {
           const updated = [...prev, msg];
-          chrome.storage.local.set({ explainx_chat_messages: updated });
+          const toStore = updated.slice(-200).map(m => ({ ...m, imageUrl: m.imageUrl ? "[image]" : undefined }));
+          chrome.storage.local.set({ explainx_chat_messages: toStore });
           return updated;
         });
         setStreamText("");
@@ -143,7 +144,8 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
             isError: true,
           };
           const updated = [...prev, errMsg];
-          chrome.storage.local.set({ explainx_chat_messages: updated });
+          const toStore = updated.slice(-200).map(m => ({ ...m, imageUrl: m.imageUrl ? "[image]" : undefined }));
+          chrome.storage.local.set({ explainx_chat_messages: toStore });
           return updated;
         });
         setStreamText("");
@@ -218,7 +220,13 @@ export default function AIChatCard({ className, onClose }: AIChatProps) {
 
     const updated = [...messages, userMsg];
     setMessages(updated);
-    chrome.storage.local.set({ explainx_chat_messages: updated });
+    // Strip base64 image data before saving — images are huge and quickly fill the 5MB quota.
+    // We store a placeholder so the chat history loads correctly (image won't re-display, but that's OK).
+    const toStore = updated.slice(-200).map(m => ({
+      ...m,
+      imageUrl: m.imageUrl ? "[image]" : undefined,
+    }));
+    chrome.storage.local.set({ explainx_chat_messages: toStore });
     
     const sentImage = pendingImage;
     setInput("");
